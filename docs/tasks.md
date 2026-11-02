@@ -1,10 +1,10 @@
 # Lokota Web — implementation tasks
 
-Status: **task plan approved by the owner on 2026-11-02; functional implementation accepted; visual revision locally verified and awaiting owner review; T-13/T-14 deferred**.
+Status: **task plan approved by the owner on 2026-11-02; functional implementation accepted; visual revision locally verified and awaiting owner review; commit/push completed; T-13 setup handoff in progress; T-14 deferred**.
 Date: 2026-11-02.
 Baseline: approved [requirements.md](requirements.md), approved [architecture.md](architecture.md), and [AGENTS.md](../AGENTS.md).
 
-The owner approved the architecture with "approved" on 2026-11-02. This breakdown follows that approval. It does not change the approved design or authorize a push, deployment, account configuration, or DNS change. The owner subsequently approved this plan with "approved" on 2026-11-02, authorizing T-01–T-12; do not request another plan/design approval.
+The owner approved the architecture with "approved" on 2026-11-02. This breakdown follows that approval. Plan approval alone did not authorize a push, deployment, account configuration, or DNS change. The owner subsequently approved this plan with "approved" on 2026-11-02, authorizing T-01–T-12; do not request another plan/design approval. Later commit/push and Pages handoff authorizations are recorded in the SDD consistency review below; they do not establish final visual acceptance or a completed deployment.
 
 ## Status and completion rules
 
@@ -14,6 +14,8 @@ The owner approved the architecture with "approved" on 2026-11-02. This breakdow
 - **deferred:** awaiting external inputs or a later explicitly authorized phase; the reason is listed below.
 
 Keep these task IDs stable. Update status and evidence in this file as work proceeds. Tests belong with the behavior they verify, rather than waiting until the end. No task is complete just because files were created. Temporary, clearly labelled development placeholders are allowed; they do not establish real club facts or launch readiness.
+
+The statuses below distinguish implemented functionality from final visual acceptance. T-07–T-10 remain done for their functional outcomes after T-06/T-11 were reopened for presentation feedback; this is not a claim that the revised appearance is approved. T-13 may prepare the owner-authorized temporary-site handoff while that review is open; it is not a waiver of final-domain/content launch checks.
 
 ## Task overview
 
@@ -31,7 +33,7 @@ Keep these task IDs stable. Update status and evidence in this file as work proc
 | T-10 | Metadata and generated-output validation | T-07, T-08, T-09 | done |
 | T-11 | Integrated local verification and corrections | T-10 | in_progress |
 | T-12 | Offline CI and concise maintainer guidance | T-02–T-05, T-10 | done |
-| T-13 | Pages preview/production setup and daily refresh | T-11, T-12, Q-10 account details, setup authorization | deferred |
+| T-13 | Pages preview/production setup and daily refresh | T-12; temporary-site handoff authorized; T-11 appearance review and Q-10 checks remain open | in_progress |
 | T-14 | Real content readiness and eventual domain launch | T-11, T-13, missing content/assets/domain details, launch authorization | deferred |
 
 The local application and its checks can be completed without account access, final branding, old-content imports, or domain changes. T-13 and T-14 must not be reported as complete by a successful local build.
@@ -90,7 +92,7 @@ Build the common Czech layout/navigation, spacing/type tokens, accessible card/t
 
 Implement the approved homepage hierarchy, mixed feed, 10-item feed pagination, manual article details, and yearly manual article archives. Add next-match/standing support and a visible Žižkova 200 entry point. Generated match entries link to stable anchors on the matches page. Include cover images/galleries where supplied and useful empty states when no manual news exists. Keep historical manual articles independent of latest-season sports refreshes.
 
-Owner-directed refinement, 2026-11-02: add the A-team's full official table directly to the homepage with that team highlighted, compact phone/PC columns and a complete-table link. Verify selection by club/name rather than seasonal IDs, empty/missing data and preserved official ordering/points. T-06/T-11 remain open for visual review; the shared-header logo is pending the owner's asset under T-14.
+Owner-directed refinement, 2026-11-02: add the A-team's full official table directly to the homepage with that team highlighted, compact phone/PC columns and a complete-table link. Verify selection by club/name rather than seasonal IDs, empty/missing data and preserved official ordering/points. T-06/T-11 remain open for visual review. The subsequently supplied shared-header logo is integrated; see the verification record below.
 
 **Verification/completion:** representative content appears in the right order and routes/pagination; adding content does not require component edits. Draft pages and metadata are absent; generated entries have no fabricated article/cover requirement. Final internal-link/anchor checks run in T-10.
 
@@ -136,17 +138,19 @@ Add a minimal GitHub workflow for lockfile installation, type/content validation
 
 ## T-13 — Pages setup and daily refresh
 
-**Status reason:** deferred until Q-10 account/repository visibility/allowances are available and external setup is authorized. This does not block T-01–T-12.
+**Status reason:** in progress for the owner-requested Pages setup instructions after the authorized push. The owner is navigating the Cloudflare dashboard; no project URL, successful deployment, account limits, PR preview, outage-retention check or daily refresh activation has been verified. These remaining Q-10 and operational checks prevent completion. The handoff may proceed for the temporary noindex site while T-06/T-11 visual review remains open; final-domain launch remains T-14.
 
 **Traceability:** D-04–D-07, D-09; FR-10, FR-11; CON-05, CON-06; NFR-07, NFR-08; Q-10; R-04, R-05, R-08.
 
 Prepare/review concrete settings first, then connect the repository to Pages when authorized: pinned Node, one lockfile install, full validated static build, dist output, PR previews, and main production builds. Confirm actual limits/account usage. Create the main-branch deploy hook and store its URL as a secret without exposing it. Add/enable the bounded scheduled/manual workflow using the approved 04:17 UTC daily schedule, without write permissions, daily commits, Workers, or API tokens. Record the repository-specific inactivity/schedule-reenable procedure and existing notification behavior.
 
+Prepared handoff: use the Pages flow reached through “Continue to Pages” in the owner's supplied dashboard screenshot, GitHub repository vojtechkrakora/lokota-web, branch main, Node 24.22.2, SKIP_DEPENDENCY_INSTALL=1, build command npm ci && npm run build, and output dist. Root stays at the repository root. Add SITE_ORIGIN for Production using the actual stable project pages.dev address once assigned; previews use CF_PAGES_URL. The framework preset is optional when these values are supplied manually. These are reviewed settings/instructions, not evidence that the account is configured. D-07 and README describe the same settings.
+
 **Verification/completion:** demonstrate a PR preview and main publication on pages.dev, correct noindex behavior, a manual and scheduled hook request, and the actual resulting Pages build status. Verify a forced failed build leaves the previous successful deployment available, and recovery publishes correctly. Confirm secret redaction, notification delivery where supported, build duration/output limits, and budget headroom. A workflow file or hook HTTP success alone is insufficient evidence. Keep final-domain changes outside this task.
 
 ## T-14 — Real content readiness and eventual domain launch
 
-**Status reason:** deferred for verified branding, photographs/articles, club/venue/contact material, actual tournament edition/results/files, domain/DNS/email details, and explicit launch authorization. Content can be gathered earlier without fabricating missing information.
+**Status reason:** deferred for remaining branding/content decisions, photographs, club/venue/contact material, actual tournament edition/results/files, domain/DNS/email details, and explicit final-launch authorization. The supplied logo is integrated and one clearly labelled sample news article is retained for review; neither completes real content readiness. Content can be gathered earlier without fabricating missing information.
 
 **Traceability:** D-03, D-07–D-10; FR-07–FR-09, FR-11; CON-07; NFR-01–NFR-04, NFR-08; Q-06–Q-10; R-06, R-07.
 
@@ -158,11 +162,13 @@ Logo input clarified on 2026-11-02: the owner will provide the asset. Integrate 
 
 ## Current handoff
 
-The functional implementation is complete with the evidence below and was accepted by the owner. T-06/T-11 have been reopened for the owner’s requested visual revision; the revised appearance is locally verified and awaits owner review. T-13/T-14 remain deferred: account setup, daily refresh activation, actual preview/production publication, real content and eventual domain launch need their listed inputs and authorization. No new commit, push, deployment, account or DNS change was performed. The local preview serves the successful live build on port 4321; it is not a public deployment.
+The functional implementation is complete with the evidence below and was accepted by the owner. T-06/T-11 have been reopened for the owner’s requested visual revision; the revised appearance is locally verified and awaits owner review. Commit 7f44401 contains the implementation, logo, UI refinements, sample article and specifications, and was pushed to origin/main at the owner's request. T-13 is in progress for the Pages setup handoff; actual deployment, account/CI outcomes and daily refresh are unverified. T-14 remains deferred for real content readiness and eventual domain launch. The last verified local build has 14 HTML pages/24 files, one sample article and no tournament editions; historical zero-article/12-page evidence below describes earlier states. No Cloudflare project, public URL, deployment, account or DNS change has been verified by the agent.
 
 Plan approval/implementation authorization: explicitly approved by the owner with "approved", 2026-11-02. Architecture approval is recorded in [architecture.md](architecture.md); it does not need to be requested again.
 
 ## Local verification record — 2026-11-02
+
+The following records describe successive historical states, including earlier empty content, pending assets and superseded palettes. Their “no commit/push” statements apply at that stage only. Use Current handoff and the SDD consistency review for the latest state; previous passing checks are not claims that they were rerun during the documentation review.
 
 | Tasks | Outcome and actual evidence |
 | --- | --- |
@@ -204,7 +210,7 @@ Supplied logo integration, 2026-11-02 (T-06/T-11, logo input of T-14; FR-09; D-0
 
 Logo verification: npm run build passed with Astro 0 errors/warnings/hints, 17/17 existing tests, fresh live data and checked 12-page/22-file output. On all 12 generated HTML routes, including pagination and 404, browser checks confirmed the logo loads, has five responsive variants, correct alternative text/dimensions and a home link, and the old banner message is absent. At 320/360/390/768/1440px with normal and 200% text, no page overflow or logo distortion was found. Visually inspected 1440px desktop and 390px phone captures. Core pages retain zero scripts; git diff --check passed. The local preview serves this successful live build. No new dependencies, commit, push, deployment or infrastructure changes were introduced.
 
-Owner-authorized feed refinement, 2026-11-02 (T-02/T-05–T-08/T-10/T-11; FR-01–FR-04/FR-09; D-02/D-03/D-08): implement distinct A–E accents (red/blue/green/purple/orange), actual paired derby accents, a photo/default-emblem tile for news and a numeric score tile for results. Make cover optional in both content validators and article rendering. Remove the unused club nickname from all public copy/metadata. Verify optional-cover authoring, score side/zero/fractional handling, colors/derbies, drafts, generated references and mobile/PC presentation. Specifications/design were updated before implementation; no new approval is required for this explicit request.
+Owner-authorized feed refinement, 2026-11-02 (T-02/T-05–T-08/T-10/T-11; FR-01–FR-04/FR-09; D-02/D-03/D-08): implement distinct A–E accents (red/blue/green/purple/orange), actual paired derby accents, a photo/default-emblem tile for news and a numeric score tile for results. Make cover optional in both content validators and article rendering. Remove the unused club nickname from all public copy/metadata. Verify optional-cover authoring, score side/zero/fractional handling, colors/derbies, drafts, generated references and mobile/PC presentation. The committed requirements/design cover this explicitly requested scope. The single implementation commit does not independently establish the edit order; see the retrospective consistency review below. Authorization to implement this request does not establish final visual acceptance.
 
 Delivered: A red, B blue, C green, D purple and E orange across feed entries, score/team badges, match cards and standings. A shared mapping uses confirmed club identity/published suffixes; derby stripes and score values use the actual two colors. Every feed row has a visual tile: supplied photo or optimized club-emblem default for articles, validated home/away points for results. Cover frontmatter is optional, but supplied image references/alts remain validated; article details omit a missing cover figure. Replaced the unused nickname with the confirmed club name or neutral wording in header/footer, headings, copy, accessible names and page/social metadata. Internal repository/environment identifiers remain unchanged. Updated authoring guidance; no CMS, dependencies or browser scripts added.
 
@@ -215,3 +221,32 @@ Browser checks: live homepage/news/pagination/matches/standings/tournament/club/
 Owner-requested news example, 2026-11-02 (T-07; FR-01/FR-02): added one locally visible Czech article, “Připravujeme nový klubový web”, describing the developing website and planned content. The body explicitly identifies it as a working example. No cover is supplied, demonstrating the default club-emblem tile. This retained example replaces the previous zero-article state; it does not authorize a public launch. No application code changed.
 
 Verification: npm run build passed with 0 Astro errors/warnings/hints, 18/18 tests, fresh live sports data and checked 14-page/24-file output, including the article and yearly archive. Browser checks confirmed the article appears first on the homepage, the default emblem loads, and its detail renders the expected title, text and metadata without a cover figure or horizontal overflow at the current desktop viewport. The local preview serves the rebuilt site; no commit, push or deployment was performed.
+
+## SDD consistency review — 2026-11-02
+
+Retrospective review requested by the owner after the push and Pages navigation handoff. Reviewed the conversation, commits 818a9e8 and 7f44401, current requirements/design/tasks, representative implementation, content models and existing test coverage. This review corrects records; it does not invent a prior approval, prove an unrecorded edit order, approve the appearance, or establish deployment success.
+
+Findings and corrections:
+
+1. **Stale release/setup state:** Current handoff and document summaries still said no commit/push had occurred and both external tasks were deferred. The owner said “oki, pripraveno ke commitu”; the agent created 7f444017dbd1c566ecb9fb405f01893e237e332e. The owner then explicitly said “pushni to a rekni mi co mam vyklikat v Cloudfare”; the push succeeded and remote main was verified at that hash. Record T-13 as in_progress for the requested setup handoff, with actual publication/refresh unverified; T-14 remains deferred. The current documentation corrections are not included in that pushed commit and have not been committed/pushed by this review.
+2. **Conflicting current-state descriptions:** top-level summaries implied all T-01–T-12 were complete despite T-06/T-11 awaiting visual review; the main D-08 text still described the superseded shared-blue/charcoal design, a T-07 note still awaited the now-supplied logo, and an article-route description implied a required cover. Corrected the current text and distinguished functional completion from appearance acceptance. The sample article already had a content-only task/verification record; it requires no new application design.
+3. **Limited process evidence:** existing FR/D/T references cover the requested UI changes, but design, task breakdown and application code first entered Git together in 7f44401. Conversation approval records support the authorized phases; Git alone cannot independently prove requirements → design → tasks → implementation edit order for every refinement. Do not claim strict chronological compliance on that evidence. This is a retrospective reconciliation, not a substitute for the forward workflow in AGENTS.md. The earlier feed record's unconditional ordering claim has been qualified.
+
+Latest-change traceability (existing IDs retained):
+
+| Owner-requested change | Requirements | Design | Tasks / implementation evidence | Acceptance state |
+| --- | --- | --- | --- | --- |
+| Light overall presentation after rejection of black-heavy design | FR-09; NFR-01–NFR-03 | D-08 | T-06/T-11; shared layout and CSS, prior responsive/contrast checks | Locally verified; final appearance review open |
+| Distinct A–E web colors and both derby colors | FR-01/FR-03/FR-04/FR-09 | D-02/D-08 | T-05–T-08/T-11; team-colors helper, feed/match/table rendering, meaningful color/derby tests | Requested scope implemented; appearance review open |
+| Supplied logo visible on every page | FR-09 | D-08 | T-06/T-14; unchanged source logo, shared layout, prior image/route checks | Asset integrated; overall launch not complete |
+| Full A-team table on homepage, selected row | FR-01/FR-04 | D-02/D-08 | T-07/T-08; homepage, standingsForTeam and membership/empty-state tests | Functional behavior implemented/verified |
+| News photo/default emblem and official score tiles | FR-02/FR-09 | D-02/D-03/D-08 | T-02/T-05–T-07/T-11; optional cover validators/detail, Feed and score tests, prior editorial smoke | Implemented/verified; appearance review open |
+| Remove unused nickname from visitor text and metadata | FR-09 | D-08 | T-06/T-07/T-10/T-11; site/layout/page copy and prior generated-output check | Implemented/verified; internal project identifiers retained |
+| Sample website-introduction news | FR-01/FR-02 | D-02/D-03 | T-07; one labelled Markdown article, no application change; 14-page live build recorded above | Local example retained; not approval of real launch content |
+| Commit/push; temporary pages.dev site before own domain | FR-11; CON-01/CON-07 | D-07/D-10 | T-12/T-13/T-14; verified push, Pages handoff settings in README | Commit/push done; setup in progress; deployment, daily refresh and own-domain launch unverified |
+
+Remaining gates: explicit final visual acceptance (T-06/T-11); actual Pages URL/build and PR preview, GitHub checks outcome, Q-10 allowances, failure-retention/recovery and daily/manual refresh evidence (T-13); real content readiness and final-domain/DNS/email/indexing authorization (T-14). No additional infrastructure is justified by this review.
+
+Process correction: follow the existing FR → D → T order for future application changes, update only affected sections, and record the owner's exact scope and actual verification. Keep content-only requests within the approved content model. Treat guidance, setup, a successful build, and production launch as separate outcomes. A commit or push is not an approval gate for appearance or launch.
+
+Review validation: checked all 20 local Markdown links in the five edited documentation files, retained FR-01–FR-11 / NFR-01–NFR-09 / CON-01–CON-08 / D-01–D-10 / T-01–T-14 identifiers, checked for the stale combined T-13/T-14 status, and confirmed only AGENTS.md, README.md and the three existing SDD documents changed. git diff --check passed. No application tests or live build were rerun for this documentation-only correction; prior application verification is explicitly identified above. No commit, push, deployment or infrastructure change was made during the review.

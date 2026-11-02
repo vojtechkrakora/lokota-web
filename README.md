@@ -2,7 +2,7 @@
 
 Czech static website for **KK Lokomotiva Tábor**. Astro, TypeScript, Git-managed Markdown and public ČKA data. No backend or browser framework.
 
-The owner approved the requirements, architecture and task plan. Local implementation includes the supplied club logo; final appearance review, real editorial/tournament/contact content and external deployment setup remain pending. The light design is labelled as a working version, and indexing is disabled.
+The owner approved the requirements, architecture and task plan. The implementation, supplied club logo, team accents and one labelled sample article are committed and pushed. Final appearance review, real editorial/tournament/contact content and verified deployment remain pending. The owner is being guided through Cloudflare Pages setup; this is not a verified public launch. The light design is labelled as a working version, and indexing is disabled.
 
 ## Develop and verify
 
@@ -88,11 +88,22 @@ Each release fetches one fresh normalized dataset into ignored .cache storage. P
 
 Required API/schema failures stop the new build and remove its old temporary dataset. Retry after recovery, or inspect the safe endpoint/status/schema diagnostics and compare the current public OpenAPI contract with the integration. Do not replace a failed live build with fixtures or an empty season. A first publication needs a successful live build. On Pages, the intended policy is that the last successful deployment remains served; **new editorial changes wait too**. Temporary build caches are not a durable last-good data store. Account-level retention/failure behavior still needs deployed verification.
 
-## Hosting handoff (not configured)
+## Hosting handoff (deployment unverified)
 
-T-13/T-14 in docs/tasks.md cover the remaining setup and launch. No Pages project, Git integration, deployment hook, schedule, account secrets or DNS were configured. The offline GitHub checks workflow needs no deployment secrets or live API.
+T-13 in docs/tasks.md is in progress for the owner-requested setup handoff; T-14 final content/domain launch remains deferred. The implementation is on GitHub main (7f44401). No Pages project URL, Git integration result, deployment hook, schedule, account settings or DNS changes have been verified by the agent. The offline GitHub checks workflow is pushed, but its remote outcome has not been checked; it needs no deployment secrets or live API.
 
-Future Pages setup must pin Node 24.22.2, use one `npm ci`, run `npm run build`, and publish dist. Confirm the provider's automatic-install setting to avoid a second install. Main should set SITE_ORIGIN to its verified permanent pages.dev origin; previews use CF_PAGES_URL. Locally the origin may be absent (no fabricated canonical). Temporary sites remain noindex via HTML, robots.txt and response headers until an authorized launch change.
+In Workers & Pages > Create application, use the Pages entry point (the owner's current screenshot labels it “Continue to Pages”), then import vojtechkrakora/lokota-web from GitHub. Use main for Production, leave root at the repository root, and set:
+
+| Setting | Value |
+| --- | --- |
+| Build command | npm ci && npm run build |
+| Build output directory | dist |
+| NODE_VERSION, Production and Preview | 24.22.2 |
+| SKIP_DEPENDENCY_INSTALL, Production and Preview | 1 |
+
+The framework preset is optional when these values are provided manually. Disabling the automatic dependency install ensures the build performs one explicit lockfile install. See the official [Pages Git setup](https://developers.cloudflare.com/pages/get-started/git-integration/) and [build environment settings](https://developers.cloudflare.com/pages/configuration/build-image/).
+
+After the stable project pages.dev address is assigned, set SITE_ORIGIN for Production to that actual HTTPS origin and rebuild; previews use CF_PAGES_URL. Do not substitute a guessed available hostname or a per-deployment hash URL for the stable production origin. Locally the origin may be absent (no fabricated canonical). Temporary sites remain noindex via HTML, robots.txt and response headers until an authorized launch change. Successful instructions or a push do not establish a successful Pages build: T-13 still requires deployed verification.
 
 The approved future refresh target is daily at 04:17 UTC via a secret Pages deploy hook, plus manual dispatch. An accepted hook only requests a build; verify the actual Pages build/deployment result. Confirm account quotas, failure notifications and GitHub scheduled-workflow inactivity/re-enable behavior before enabling automation. Final domain/DNS, HTTPS, existing email records, redirects and real content require their own launch review.
 
