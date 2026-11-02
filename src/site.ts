@@ -1,6 +1,7 @@
 export const site = {
   name: 'Lokomotiva Tábor', clubName: 'KK Lokomotiva Tábor', clubId: 279,
   apiBase: 'https://kuzelky.cz/api/v1/public', locale: 'cs-CZ', timeZone: 'Europe/Prague',
+  clubLogoOrigin: 'https://evidence.kuzelky.cz', clubLogoPath: '/assets/clubs/',
 } as const;
 
 export const navigation = [

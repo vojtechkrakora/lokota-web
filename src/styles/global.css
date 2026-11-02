@@ -146,6 +146,10 @@
   .match-teams { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; margin-block: 20px 12px; font-size: .92rem; line-height: 1.4; }
   .match-teams > span { min-width: 0; overflow-wrap: anywhere; }
   .match-teams > span:last-child { text-align: right; }
+  .match-teams.with-logos > span { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; }
+  .match-teams.with-logos > span:last-child { align-items: flex-end; }
+  .team-logo { width: 48px; height: 48px; flex: none; object-fit: contain; padding: 3px; background: var(--white); border: 1px solid var(--line); border-radius: 8px; }
+  .team-logo-placeholder { display: grid; place-items: center; color: var(--muted); background: var(--paper); font-weight: 400; }
   .match-teams small { display: block; margin-top: 5px; font-size: .7rem; color: var(--muted); font-weight: 400; }
   .club-team { font-weight: 700; }
   .club-team[data-team-color] { color: var(--team-accent); }

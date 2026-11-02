@@ -26,6 +26,8 @@ Record approval in the relevant document when the owner explicitly approves it; 
 
 For incremental changes, update the affected requirements, design decisions, and task scope in that order before editing application code; retain the existing IDs and documents. An explicit implementation request authorizes that specific refinement, not final acceptance of the resulting appearance. Ordinary content authoring within the approved model only needs a task/evidence record. Record commit, push, setup handoff, verified deployment, and final-domain launch separately. If a record was missed, label its correction as retrospective rather than inventing an earlier approval or verification.
 
+The owner requested a club favicon and API-sourced match emblems on 2026-11-02. This local addition is recorded and verified as T-15 (FR-03/FR-09; D-08): reuse the supplied logo for the favicon and own teams, retrieve optional opponent club.logo artwork only during preparation, emit local optimized files, and fall back neutrally without breaking valid sports data. It does not authorize commit/push/deployment or close the overall appearance review.
+
 ## Engineering principles
 
 - **Simplicity first:** choose the simplest solution satisfying approved requirements. Explain the concrete need for each new dependency, service, or abstraction.

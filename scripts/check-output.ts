@@ -35,6 +35,8 @@ export async function checkOutput(directory: string, provenance: 'live' | 'fixtu
   }
   for (const [file, body] of html) {
     if (!body.includes(`data-sports-provenance="${provenance}"`)) throw new Error('Sports provenance mismatch in output');
+    const favicon = body.match(/<link\b[^>]*rel="icon"[^>]*href="([^"]+)"/)?.[1];
+    if (!favicon?.startsWith('/')) throw new Error(`Missing local favicon: ${relative(root, file)}`);
     if (!body.includes('<html lang="cs"') || !/<title>[^<]+<\/title>/.test(body) || !/name="description" content="[^"]+"/.test(body) || !body.includes('name="robots" content="noindex, nofollow"')) throw new Error(`Missing Czech metadata/noindex: ${relative(root, file)}`);
     const canonical = body.match(/rel="canonical" href="([^"]+)"/)?.[1];
     if (origin && !file.endsWith('/404.html') ? !canonical || !canonical.startsWith(`${origin}/`) : !!canonical) throw new Error('Canonical origin does not match build context');
