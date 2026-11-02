@@ -1,7 +1,7 @@
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { prepareSports } from '../src/lib/sports.ts';
-import { prepareClubLogos } from './prepare-club-logos.ts';
+import { prepareClubLogos, saveClubLogoSnapshots } from './prepare-club-logos.ts';
 
 export const datasetPath = new URL('../.cache/sports.json', import.meta.url);
 export async function writeSports(fixture = false, options: { prepare?: typeof prepareSports; destination?: URL } = {}) {
@@ -21,6 +21,9 @@ export async function writeSports(fixture = false, options: { prepare?: typeof p
   return data;
 }
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  try { await writeSports(process.argv.includes('--fixture')); }
+  try {
+    const data = await writeSports(process.argv.includes('--fixture'));
+    if (process.argv.includes('--update-club-logos')) console.log(`Club logo snapshots saved: ${await saveClubLogoSnapshots(data)}.`);
+  }
   catch (error) { console.error(error instanceof Error ? error.message : 'Sports preparation failed'); process.exitCode = 1; }
 }

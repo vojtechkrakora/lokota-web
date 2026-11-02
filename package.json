@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "node scripts/prepare-sports.ts && astro dev --host 0.0.0.0",
     "dev:offline": "node scripts/prepare-sports.ts --fixture && astro dev --host 0.0.0.0",
+    "logos:update": "node scripts/prepare-sports.ts --update-club-logos",
     "check": "astro check && node scripts/check-content.ts",
     "test": "node --test tests/*.test.ts",
     "verify": "npm run check && npm test",
