@@ -67,9 +67,13 @@ Acceptance: displayed ranks and points match the selected official competition, 
 
 ### FR-05 — Individual player features deferred
 
-The owner does not want player details for now. Defer individual player pages, biographies/member directory, and a player-statistics section from the initial release. The existence of public player endpoints does not bring those features into scope.
+Individual public player pages, biographies/member directory and a player-statistics section remain deferred. The existence of public player endpoints does not bring those features into scope.
 
-Acceptance: initial-release navigation and page generation do not introduce individual player features or require player-detail/statistics API requests. Team-level matches, results, and standings still satisfy FR-03 and FR-04. Any future player feature requires a specification change.
+Owner-directed editorial pilot, 2026-11-02: after discussing player profiles as report-writing context, the owner accepted the proposed first step with “pojdme na to”: prepare one factual Czech report about the latest completed A-team match for tone review. The assistant may inspect documented public player-result data for that article, identify players and describe verified performances. Prepare it initially as a draft in the existing news model, with official source references; publication requires explicit editorial approval. Do not invent nicknames, character traits, quotes, atmosphere, records or historical comparisons. The pilot does not authorize public player pages, a new profile collection, automated generation/publication, an AI API service, or additional build-time player requests. Decide the profile structure after reviewing the first real report.
+
+Acceptance: the article selects the latest completed, non-future A-team match in the latest season by actual date/time and confirmed club/team identity; it does not assume the highest round is the newest match. Every score, name and individual statistic in the draft is traceable to checked official data. Missing fields are omitted, not inferred or replaced with zero. The draft remains excluded from public output until editorial approval; after that approval it is published through the existing news model. Existing team-level builds and navigation remain unchanged; future profile or generation tooling needs its own specification/design/task update.
+
+Editorial approval, 2026-11-02: the owner requested “udelej z toho regulerni clanek a commitni a pushni”, explicitly approving the first A-team report for publication and authorizing its commit and push with the related SDD records. This does not approve a profile system or automated report generator.
 
 ### FR-06 — Seasons and association of records
 
