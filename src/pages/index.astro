@@ -1,0 +1,42 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Feed from '../components/Feed.astro';
+import MatchCard from '../components/MatchCard.astro';
+import { feedContent } from '../lib/content.ts';
+import { nextMatch, standingsForTeam } from '../lib/sports.ts';
+import { number } from '../lib/dates.ts';
+import { teamAccent, matchAppearance } from '../lib/team-colors.ts';
+import { site } from '../site.ts';
+const { sports, feed, news, current } = await feedContent();
+const next = nextMatch(sports.matches, sports.fetchedAt);
+const nextAppearance = matchAppearance(next ? [next.homeTeam, next.awayTeam] : []);
+const aTeamName = `${site.clubName} A`;
+const aTeamTables = standingsForTeam(sports, aTeamName);
+const positions = sports.competitions.flatMap(c => c.rows.filter(r => r.team.club.id === site.clubId).map(r => ({ ...r, competition: c.competition.name })));
+---
+<Layout title="Kuželky v Táboře" description="Novinky KK Lokomotiva Tábor, zápasy, oficiální výsledky a tabulky. Turnaj dvojic Žižkova 200.">
+  <header class="home-heading"><div><p class="eyebrow">Kuželkářský klub · Tábor</p><h1>Aktuálně v klubu</h1></div><p>Klubové zprávy, zápasy a výsledky.</p></header>
+  <div class="season-strip"><span>Sezóna <strong>{sports.season.name}</strong></span><span>{sports.teams.length} družstev · {sports.competitions.length} soutěží</span><a href="/zapasy/">Rozpis zápasů <span aria-hidden="true">→</span></a></div>
+  <div class="home-grid"><section id="aktualne"><div class="section-heading"><h2>Novinky a výsledky</h2><a class="text-link" href="/novinky/">Všechny zprávy <span aria-hidden="true">→</span></a></div><Feed items={feed.slice(0, 10)} news={news} />{feed.length > 10 && <a href="/novinky/strana/2/" class="button button-outline more-news">Starší zprávy →</a>}</section>
+    <aside class="sidebar">
+      <section class="home-standings" data-team-color="red" aria-labelledby="a-team-heading">
+        <p class="eyebrow">Sezóna {sports.season.name}</p><h2 id="a-team-heading">Tabulka A-týmu</h2>
+        {aTeamTables.length ? aTeamTables.map(({ competition, rows }) => <div class="home-league">
+          <h3>{competition.name}</h3>
+          {rows.length ? <div class="table-scroll" tabindex="0" role="region" aria-label={`Tabulka A-týmu · ${competition.name}`}><table>
+            <caption class="sr-only">{competition.name} · oficiální tabulka · {sports.season.name}. A-tým našeho klubu je zvýrazněný.</caption>
+            <thead><tr><th scope="col"><abbr title="Pořadí">Poř.</abbr></th><th scope="col">Družstvo</th><th scope="col"><abbr title="Odehrané zápasy">Z</abbr></th><th scope="col">Body</th></tr></thead>
+            <tbody>{rows.map(row => {
+              const selected = row.team.club.id === site.clubId && row.team.name === aTeamName;
+              return <tr class:list={{ 'selected-team': selected }} data-team-color={teamAccent(row.team)}><td>{row.position}.</td><th scope="row">{row.team.name}{selected && <span class="team-selection">Náš A-tým</span>}</th><td>{row.matches}</td><td><strong>{number(row.tablePoints)}</strong></td></tr>;
+            })}</tbody>
+          </table></div> : <p class="small">Oficiální tabulka A-týmu zatím není k dispozici.</p>}
+          <a href={`/tabulky/#soutez-${competition.id}`} class="text-link">Podrobná tabulka →</a>
+        </div>) : <p>Tabulka A-týmu pro tuto sezónu zatím není k dispozici.</p>}
+      </section>
+      <section class="next-match" data-team-color={nextAppearance.accent} style={nextAppearance.style}><h2>Příští zápas</h2>{next ? <><p class="small">{next.competition.name}</p><MatchCard match={next} anchor={false} /><a href={`/zapasy/#zapas-${next.id}`} class="text-link">Vše o zápasu →</a></> : <p>Další zápas zatím není naplánován.</p>}</section>
+      <section class="standing-summary"><div class="section-heading"><h2>Naše družstva</h2></div>{positions.length ? <ul>{positions.map(row => <li data-team-color={teamAccent(row.team)}><span><strong>{row.team.name.replace('KK Lokomotiva ', '')}</strong><small>{row.competition}</small></span><span class="position">{row.position}.<small>místo</small></span></li>)}</ul> : <p>Oficiální tabulky zatím nejsou k dispozici.</p>}<a href="/tabulky/" class="text-link">Kompletní tabulky ↗</a></section>
+      <section class="tournament-promo"><p class="eyebrow">Turnaj dvojic</p><h2>Žižkova 200</h2><p>200 hodů sdružených.</p><p class="small">{current ? `${current.data.year} · ${current.data.description}` : 'Informace o dalším ročníku připravujeme.'}</p><a href="/zizkova-200/" class="text-link">Informace a výsledky →</a></section>
+    </aside>
+  </div>
+</Layout>

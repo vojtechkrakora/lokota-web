@@ -1,0 +1,273 @@
+# Lokota Web — technical design
+
+Status: **technical design approved by the owner on 2026-11-02; local tasks T-01–T-12 implemented and locally verified on 2026-11-02; external setup/launch deferred**.
+Date: 2026-11-02. Baseline: the approved [requirements.md](requirements.md), including the owner's Q-01–Q-10 answers, and [AGENTS.md](../AGENTS.md).
+
+The owner authorized continuing after the initial documentation commit, then approved this design with "approved" on 2026-11-02. Decisions D-01–D-10 are the approved technical baseline. The subsequent [tasks.md](tasks.md) contains the approved implementation breakdown. No application code, dependencies, deployment configuration, or DNS changes have been introduced during these documentation phases.
+
+## 1. D-01 — Static application and minimal toolchain
+
+Use Astro static output, TypeScript, ordinary CSS, Markdown Content Collections, and local assets. Deploy generated files to Cloudflare Pages through GitHub integration. Visitors receive HTML/CSS/images; there is no request-time API dependency, application server, database, authentication, CMS, or frontend framework.
+
+Use npm and commit its lockfile. Select Astro 7.4.4, the stable version observed in the official npm package metadata during this investigation, as the initial implementation baseline. Use Node 24 LTS, pinning one supported patch consistently for local development, CI, and Pages when scaffolding. TypeScript and @astrojs/check are development dependencies for meaningful type/content checks; choose compatible stable versions and lock them during implementation. Astro's documented Node minimum is currently 22.23.4, which Node 24 satisfies. Recheck compatibility if implementation happens substantially later.
+
+Use Astro's exported Zod utility from astro/zod for content and external-data validation, rather than adding a second validation package. Use Node's built-in fetch, test runner, assertions, and TypeScript type stripping for simple build scripts/pure-module tests. This keeps the initial dependency list to Astro and its required build/check tooling. Node-run modules use erasable TypeScript, explicit relative import extensions, and no Astro virtual imports or TypeScript path aliases; type checking remains a separate step.
+
+No Cloudflare runtime adapter, Wrangler, Worker, Pages Functions, utility CSS framework, image service, generated OpenAPI client, or SDD CLI is needed. If later compatibility testing reveals a required build dependency, record its concrete purpose before adding it.
+
+Sources: [Astro installation prerequisites](https://docs.astro.build/en/install-and-setup/), [Astro package metadata](https://registry.npmjs.org/astro/latest), [Astro Zod reference](https://docs.astro.build/en/reference/modules/astro-zod/), [Node 24 TypeScript support](https://nodejs.org/docs/latest-v24.x/api/typescript.html), and [Pages build image overrides](https://developers.cloudflare.com/pages/configuration/build-image/).
+
+Traceability: CON-01–CON-03, CON-05, CON-06; NFR-03, NFR-05, NFR-06, NFR-09.
+
+## 2. System boundaries
+
+```mermaid
+flowchart LR
+  Git[Git content and local photographs] --> Validate[Validate content and references]
+  CKA[Public read-only ČKA API] --> Prepare[Fetch and validate sports data once]
+  Prepare --> Data[Temporary build dataset]
+  Validate --> Build[Astro static build]
+  Data --> Build
+  Build --> Check[Check generated output]
+  Check --> Pages[Cloudflare Pages static publication]
+  Pages --> Visitor[Visitor browser]
+  Schedule[Daily GitHub Action] --> Hook[Secret Pages deploy hook]
+  Hook --> Validate
+```
+
+The diagram describes the future flow, not configured resources. On a required fetch/validation/build failure, publication stops and the existing production deployment remains available. The Action only requests a build; Cloudflare performs the build and publication.
+
+The future repository should contain only what those responsibilities need:
+
+| Area | Responsibility |
+| --- | --- |
+| Astro configuration and package/lock files | Static output, shared Node/tool versions, scripts, production origin. |
+| Site configuration | Central ČKA base URL, confirmed club id 279, Czech locale, Europe/Prague display convention, and shared navigation. No seasonal competition IDs. |
+| Content collections | Manually maintained news, tournament editions, and club-information pages; assets may be colocated with entries. |
+| ČKA integration modules | Response schemas, bounded HTTP/pagination, selection, normalization, and one build-dataset reader. No rendering concerns. |
+| Feed/date helpers | Pure chronology, stable keys, Czech display formatting, and next-match selection. |
+| Astro pages, layouts, and components | Render validated content/view data, navigation, cards, tables, gallery, and metadata. |
+| Build scripts | Prepare the temporary sports dataset and validate local references/generated output. No independent framework or general plugin system. |
+| Tests and small fixtures | Pure business/transform behavior and malformed/partial boundary cases; no full API dumps or personal contact records. |
+| GitHub workflows | Offline checks for changes and the daily deploy-hook invocation, created only during authorized implementation/setup. |
+
+Keep a few cohesive modules; split only when a real responsibility needs it. The data reader must not trigger HTTP requests during module import or once per page.
+
+## 3. D-02 — Routes, information hierarchy, and feed
+
+Use Czech labels and short stable ASCII URL segments:
+
+| Public route | Responsibility |
+| --- | --- |
+| / | Club identity, first 10 mixed feed entries, next-match/standings support, and Žižkova 200 entry point. |
+| /novinky/ | Complete paginated mixed feed, 10 entries per page. Further pages use /novinky/strana/2/ etc. |
+| /novinky/{slug}/ | Manually authored article detail with cover and optional gallery. |
+| /novinky/archiv/{year}/ | Published manual articles for the year, newest first; ordinary pagination if needed. |
+| /zapasy/ | Latest-season matches grouped by competition and clearly labelled with club teams, upcoming matches and results, and stable match anchors. |
+| /tabulky/ | Latest-season official standings grouped by competition, identifying all club teams. |
+| /zizkova-200/ | Current tournament edition summary and links to edition results/archive. |
+| /zizkova-200/{year}/ | One edition, description, on-page results, photos, qualification statement if known, and downloads. |
+| /zizkova-200/archiv/ | Published past editions. |
+| /klub/, /historie/, /kontakt/, /herna/ | Verified club information from Markdown. |
+| /404.html | Czech missing-page response for static hosting. |
+
+No individual player routes are generated. Generated match news links to the stable match anchor on /zapasy/, not to fabricated Markdown articles or a new player/match-detail application. Use a season/competition link to the official source only when a verified public URL is available; never infer HTML URL patterns from API slugs.
+
+Owner-directed homepage refinement, 2026-11-02 (FR-01/FR-04): render the A-team's complete official table as a compact supporting panel before the other sidebar panels, showing rank, team, played matches and points. Highlight its row without relying on color alone. Select competitions from the current validated dataset by the confirmed club ID and exact published team name (central club name plus A), using match membership if the table is still empty. Do not hardcode seasonal IDs, fetch again, recalculate ranks or fall back to another team/season. Keep the all-team chronological news feed primary and retain the complete tables page.
+
+The mixed feed contains a small discriminated view model: source kind, stable key, date, title, summary, optional image, and link. Manual keys use article slugs; match keys use the API match id, so corrections replace one entry rather than create another. A match between two club teams creates one feed item naming both teams and one uniquely anchored match entry on /zapasy/. No generated content is written back to Git and no generative-AI service is used.
+
+Sort by the validated calendar date descending. For equal dates, manual articles precede generated summaries; use stable keys as the final deterministic tie-break. This deliberately uses day-level editorial chronology because article dates and some match times have no precise instant. Never use build/fetch time as a match's publication date. The most recent match receives no special permanent pin; all completed latest-season matches with dates can participate in the feed.
+
+Include FINISHED and FORFEIT matches in generated news only when both official team-point values are available and the match date is not in the future. Use deterministic factual Czech text naming teams, competition, result, and a forfeit label when applicable. If points/date are absent, keep the match in the results section with an honest missing-data label and omit its generated dated news entry. Corrected or reopened matches are rebuilt from their current status. A manually written report may coexist with a generated factual entry; automatic deduplication applies to the same API match, not subjective article content.
+
+Manual article archives persist across seasons; generated summaries cover the selected latest season and are derived anew at each build. Historical sports archives are not part of the initial scope. Content-only historical article/tournament additions remain supported.
+
+Traceability: FR-01–FR-06, FR-08; Q-02, Q-03, Q-05; NFR-01, NFR-04.
+
+## 4. D-03 — Content models and authoring
+
+Use three Markdown collections with Astro's built-in glob loader and frontmatter schemas. Use plain Markdown, not MDX, so editorial content does not execute application components. Stable news slugs and tournament years determine URLs independently of title changes. Validate duplicates and reserved route segments; archive/strana must not be accepted as conflicting article slugs.
+
+| Collection | Required information | Optional/default information |
+| --- | --- | --- |
+| News | Stable slug, title, publicationDate as a valid YYYY-MM-DD calendar date, summary, Markdown body. | Optional local cover image with meaningful alt; author; gallery of local image/alt/caption entries; draft=false. |
+| Tournament editions | Unique year, name=Žižkova 200 by default, edition date/date range when known, description/body with a clearly headed results section. | Announcements in Markdown; isCurrent=false; draft=false; qualifiesForMcr absent/true/false; gallery; downloads as label plus local path. |
+| Club pages | One of the four fixed page identifiers, title, summary/description, Markdown body. | Local images if supplied. Contact/venue details live in the Markdown instead of being invented in application code. |
+
+Store entries and photographs together where practical, with image metadata resolved through the collection image helper. Gallery item alt text is required; captions are optional. Do not require a photo on generated match cards. Under the owner's subsequent 2026-11-02 instruction, a news cover is optional. Omit cover frontmatter for the built-in club-emblem feed thumbnail; validate supplied covers normally. Article detail pages omit the large cover figure when absent; no stock image or synthetic club photograph is needed. Clearly labelled neutral placeholders are permissible during development only and must be reviewed before public launch.
+
+An edition may be announced before dates/results exist: represent unknown dates as absent and state that they will be announced. Validate startDate <= endDate when both are supplied, and label absent results as pending. Do not invent real edition dates or results just to fill the collection. News publication dates cannot be future-dated unless draft; scheduling future article publication is not an initial feature.
+
+Use an explicitly selected published isCurrent edition when provided (at most one), otherwise the greatest published year. Adding another edition is content-only. Invalid duplicate years/current markers fail validation. Archive entries link to their permanent year page.
+
+Žižkova 200 uses the owner's supplied wording: doubles, 200 hodů sdružených. Record MČR qualification per edition, omit the qualification claim when unknown, and show an explicit non-qualifier statement only when confirmed false. Results are a normal Markdown table in the results section, ordered as supplied. This supports flexible columns without speculative result import/ranking logic. Keep table headers/captions readable through Markdown styling and the surrounding section heading. If supplied real results cannot be represented accessibly this way, revisit a small structured table model before implementing it; do not introduce CSV/PDF parsers now.
+
+Downloadable PDF/CSV files are added to Git under a public downloads area and referenced by a validated local URL, e.g. a year-specific tournament file. Validate that paths stay inside that area, targets exist, labels are meaningful, and files meet Pages' asset limit. No browser upload form, storage service, or separate file administration is built. Photographs remain in Astro-processed source assets rather than the public downloads area.
+
+Exclude drafts from every public listing, route, gallery/image import used by public output, and SEO/sitemap entry. Public downloads are public regardless of a content entry's draft flag; do not commit confidential draft attachments to the public area. Keep draft assets out of a standalone public directory. Validate draft frontmatter/references too; a draft is an editorial state, not a bypass for broken content.
+
+Sources: [Astro Content Collections](https://docs.astro.build/en/guides/content-collections/). Traceability: CON-03; FR-02, FR-07–FR-09; A-04, A-06; Q-06–Q-08; NFR-05, NFR-06.
+
+## 5. D-04 — Verified ČKA boundary and build dataset
+
+Use only GET requests against the centralized https://kuzelky.cz/api/v1/public base URL. No ČKA credentials are needed. The [public OpenAPI schema](https://kuzelky.cz/api/v1/public/openapi?variant=public) was re-fetched on 2026-11-02; it remains OpenAPI 3.0.3, public API version 1.0.0, security=[]. Inspect current contract changes during implementation rather than committing the entire schema or generating a large client.
+
+Prepare one normalized dataset before Astro prerendering. The preparation script uses the same typed integration modules as the unit tests, validates the whole required response set, and writes one ignored temporary JSON file atomically only on success. Astro pages read that file; they do not fetch separately. Each build command prepares its own fresh dataset and never silently uses a file left by an older build. The dataset includes schemaVersion, clubId, selected season metadata, fetchedAt, normalized teams/competitions/matches, and table states. It is build input, not a public API route or durable sports cache.
+
+| Request | Purpose and required response shape |
+| --- | --- |
+| /seasons | Fetch all published season records; wrapper has items and total, without limit/offset. Select the latest by D-05. |
+| /matches?clubId=279&seasonId={selected}&limit=100&offset={offset}&sort=id&include=homeTeam.club,awayTeam.club,competition.season,venue,results | Fetch every club match, home or away. Wrapper has items,total,limit,offset. Deep includes expand their parents. |
+| /competitions/{slug}/rounds | Fetch the known competition's round numbers; live response is a bare integer array, despite the public response schema not describing its body. |
+| /competitions/{slug}/rounds/{highestRound}/table?type=ALL&include=team.club&sort=position | Retrieve official cumulative totals and ranks. Wrapper has items,total. Keep the official position values; do not derive ranks. |
+
+Those paths and parameter choices were exercised against the actual public API during this design investigation. Treat an invalid/absent required relation as an integration error; do not assume that a misspelled include would cause HTTP failure. The [API conventions](https://kuzelky.cz/api/docs/conventions/) say ignored includes may silently omit fields, and its authenticated examples are not authoritative for public filtering. For these public endpoints use the explicit filters verified in the public schema.
+
+Validate the subset used by the website with small Zod schemas and infer its TypeScript types. Accept unrelated extra fields so additive upstream changes do not break the site; discard them during normalization. Do not copy referee/contact/bank details into the website dataset. Require valid positive ids, correct club/season associations, known statuses, valid dates/times where present, pagination metadata, and requested team/competition identity. Unknown enum values or wrong required field types fail the build with maintainer diagnostics.
+
+Nullable/missing optional data is different from invalid data. Null date/time/venue, nullable scores, empty results, and empty official tables have explicit view states. Match results must have no duplicate home/away side; associate by isHome, never array order. Keep team points, pins (totalPerformance), and set points separate, including real zeros/half-points. A null is never converted to zero, and win/loss prose is not inferred from pins alone.
+
+Fetch paginated matches sequentially in stable id order until all advertised records are read. Check progress, unique ids, stable total, and returned offsets; on shifting/duplicate/incomplete pages, retry the complete collection once, then fail rather than publish a truncated dataset. The API does not provide a transactional multi-request snapshot; consistency checks detect common races, not every concurrent edit. Independent competitions may be fetched with concurrency capped at two.
+
+Use a 10-second request timeout and at most two retries for network failures, timeouts, 429, and 5xx, with short backoff and bounded Retry-After handling. Do not repeatedly retry 400/401/403/404 or schema errors. Cap the entire sports preparation at three minutes and the match collection at 100 pages; exceeding either reports an actionable failure. These are engineering bounds to review with real build measurements, not assumptions about an API rate-limit contract. Initially fetch full data: ETags are unnecessary without a trusted retained response body and a 304 alone cannot rebuild it.
+
+Normal coverage is one seasons request, one or a few club-match pages, then two requests per discovered competition: currently about eight requests for 74 matches and three competitions. No per-player calls and no per-match detail fan-out are needed.
+
+Team/competition discovery unions expanded club-side match identities and club teams present in their official tables. It does not claim to discover teams with no published matches in an otherwise undiscovered competition. The currently observed A–E teams are discovered, not hardcoded. A genuinely empty latest season yields an explicit preparation/no-matches state, not a search of older seasons or all national competitions. Revisit discovery only if real club participation cannot be covered.
+
+Traceability: CON-04, CON-05; FR-03–FR-06, FR-10; NFR-06, NFR-07; R-01–R-04.
+
+## 6. D-05 — Latest season, official tables, dates, and time
+
+For each validated season, compute its chronological start as the earlier of q1StartDate and q3StartDate. Select the greatest start date from all published records. Active is useful metadata, not a permanently pinned filter or the sole tiebreak. Do not select by numeric id, array order, season-name parsing, the current calendar year, or the season that happens to have club matches. Equal latest start dates for distinct seasons are ambiguous: fail with diagnostics rather than guess. Missing/invalid season records are an integration failure; do not publish a fabricated season.
+
+This implements the owner's literal latest-season preference: if ČKA publishes a newer future season, it becomes the default even before its first match. Show its real name and a preparation/empty state as needed, without falling back to the old season. Existing manual article/tournament archives remain accessible. All discovered competitions must report the selected season through the requested relation.
+
+Use the greatest configured round number for the official ALL table, not the greatest completed club round or the last calendar weekend. [ČKA's standings documentation](https://kuzelky.cz/api/docs/statistics/) states that recalculation covers the changed finished/forfeited match's round and every later round. Thus the highest configured round's official table includes the available completed/forfeited results across the competition, including matches played out of numerical order. Live checks on 2026-11-02 confirmed this for all three club competitions:
+
+| Competition | Highest configured round queried | Returned ALL rows | Observed club teams |
+| --- | --- | --- | --- |
+| 2. KLM A | 22 | 12 | Tábor A |
+| Krajský přebor JČK 2 | 22 | 12 | Tábor B |
+| OP Tábor | 14 | 7 | Tábor C, D, E |
+
+These round numbers are observations, not configuration. Display the season and dataset update time and say current official table; do not imply that the final round has been played. Preserve official positions and show matches played, wins/draws/losses, and points, with scoring columns labelled as needed. Recalculation is asynchronous (the documentation says typically about two minutes); never repair a short mismatch by recalculating standings locally.
+
+No rounds or a valid empty table means the table is not yet available; render that state without probing invented round=0 semantics or fabricating rank zero. A failed request or invalid table contract fails the new build. Recheck the highest-round cumulative behavior if ČKA changes its contract; it is a documented dependency, not a general rule inferred from bowling.
+
+Keep match date as YYYY-MM-DD and time as the API's nullable HH:MM string. [The schedule documentation](https://kuzelky.cz/api/docs/competition-schedule/) confirms that wire representation but does not specify an offset for time. The chosen display convention is Czech local wall time, Europe/Prague; show the supplied calendar date/time without converting it to a fabricated UTC instant. This is a documented convention pending stronger API timezone evidence, not a claim that the API guarantees a timezone.
+
+Capture one UTC fetchedAt instant for the build, and derive the Prague calendar date/clock using Intl for comparisons and Czech labels. Match/edition date-only values must not pass through a UTC-midnight conversion that can shift days. Date/time formatting uses built-in Intl, avoiding a date library. Around DST, preserve the source wall-clock label rather than guessing an offset.
+
+Select the next match from SCHEDULED/PREPARATION entries with a future Prague date/time relative to the build. Today's match without time remains eligible with 'Čas bude upřesněn'. Older scheduled matches remain visible with their official status but are not promoted as the next match. IN_PROGRESS has its own label, not a finished result. With daily static refresh, summaries can age between builds; always show the last successful data-update time and avoid claims of live results.
+
+Traceability: FR-01, FR-03, FR-04, FR-06, FR-10; Q-03; R-02, R-03.
+
+## 7. D-06 — Outage behavior without durable sports storage
+
+**Choose preserving the last successful deployment as the initial fallback.** On a required API transport, pagination, identity, or schema error, the new build exits unsuccessfully and nothing is published. Existing HTML, results, images, and assets remain served by Pages. A first build without any existing publication fails visibly to the maintainer and must be retried after recovery; no fake season, fixture results, or empty emergency sports data is published as real data.
+
+Valid incomplete source information is handled differently: a null score/venue/time, empty results array, no matches, or no official table is a supported data state and can publish with clear Czech wording. Do not catch every exception and disguise it as an empty list. Preserve supplied official values wherever present.
+
+Always show 'Sportovní data aktualizována …' using fetchedAt, and identify ČKA as the source. This label remains truthful when an old deployment stays online. A purely static old page cannot automatically change its warning after an outage, so no dynamically computed freshness guarantee is claimed and no client polling is added.
+
+The approved tradeoff is intentional: **news/content changes also wait if the API is down**, even if the old site still works. The next successful daily or manual build refreshes both. If independent content publication during outages becomes a requirement, first design a trusted, versioned last-good sports artifact with explicit expiry/season/provenance validation. That is additional work, not something a deploy hook or an ephemeral build cache provides automatically.
+
+| Alternative | Initial decision and reason |
+| --- | --- |
+| Fail the new build; retain published deployment | Selected. Meets the initial preference to retain published data with no persistence mechanism or extra infrastructure. |
+| Reuse saved sports JSON/artifact across builds | Deferred. Would enable content updates during an outage but adds storage/promotion/concurrency/invalidation rules without a confirmed need. |
+| Commit generated snapshots or match articles daily | Rejected initially. Adds routine repository writes/history churn and credentials/branch handling; content should remain editorial. |
+| Worker/runtime proxy or browser API calls | Rejected. Adds runtime behavior and visitor/API coupling while daily SSG satisfies the stated freshness target. |
+
+Local tests use small fixtures and injected fetch/clock functions. Offline UI development may use an explicitly labelled development fixture path; release/Pages build commands must require live preparation and reject fixture provenance. No fixture or stale temporary file is a production fallback.
+
+Traceability: FR-10; CON-02, CON-05, CON-06; NFR-07; Q-04; R-04.
+
+## 8. D-07 — Daily refresh and deployment
+
+Use Pages Git integration for PR previews and production builds of main. The future build command runs dependency installation from the lockfile, type/content/reference checks, sports preparation, Astro static build, and generated-output checks before publication. Conceptually Pages runs npm ci followed by the project build/check scripts; the exact Pages dependency-install setting must avoid a duplicate install. Output is the static dist directory. Pin the chosen Node version explicitly instead of relying on the build image default. These files/settings are to be implemented later, not provisioned now.
+
+The simplest justified refresh automation is one scheduled GitHub Action making an HTTP POST to a Pages deploy hook for main. Approved schedule: 04:17 UTC daily (05:17/06:17 Prague), plus manual workflow dispatch. This satisfies the once-daily target without exact-time guarantees or a Worker. The workflow needs no repository write permissions, ČKA key, Cloudflare API token, or daily commit. Keep the hook URL in a GitHub Actions secret and never print it; allow only the trusted scheduled/manual workflow to use it, not pull-request code. Bound the hook request and avoid blind POST retries that could create duplicate builds.
+
+The Action validates that the hook accepted the request. This does not prove a successful Pages deployment; Pages build status/logs remain authoritative. Use existing GitHub/Pages failure notifications for the maintainer where supported and verify their delivery during setup. No external monitoring service is selected. Recovery is inspection plus manual dispatch/retry after a transient failure, or a later successful scheduled build. Disable the schedule if the deployment hook/project is removed.
+
+Expected scheduled load is at most 31 builds/month, leaving headroom within the documented 500-build Free limit for commits, previews, failures, and retries. A daily unchanged-data build is acceptable; change-detection persistence is unnecessary. Account usage and GitHub Actions allowances still require Q-10 verification before enabling it. Validate the first representative build stays below Pages' 20-minute timeout, 20,000-file limit, and 25 MiB/asset limit; the API request budget is much smaller than the build timeout.
+
+GitHub warns scheduled runs can be delayed/dropped; public-repository schedules may stop after 60 days without repository activity. Do not claim unattended operation is guaranteed indefinitely. Verify repository visibility during setup and record the appropriate re-enable/recovery procedure in this document when known. If actual inactivity makes the target unreliable, evaluate a justified provider-managed scheduler then; do not add a Worker speculatively or generate meaningless commits as a keepalive.
+
+PR previews remain public unless separately restricted by the provider; no editorial secrets should appear in them. Cloudflare documents noindex response headers on previews. Also keep the development pages.dev production domain unindexed until launch readiness, through shared metadata/configuration; a preview and a production build on pages.dev are different contexts. Use the provider deployment URL for preview asset/canonical generation, and the explicit production origin for production; no localhost canonical and no invented final club domain. Before public launch, verify canonical URLs, robots policy, and the sitemap together. A small static sitemap can be generated from the same public route list without another integration dependency.
+
+Sources: [Pages Astro guide](https://developers.cloudflare.com/pages/framework-guides/deploy-an-astro-site/), [Git integration](https://developers.cloudflare.com/pages/configuration/git-integration/), [Deploy Hooks](https://developers.cloudflare.com/pages/configuration/deploy-hooks/), [Pages limits](https://developers.cloudflare.com/pages/platform/limits/), [GitHub schedules](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule), [preview indexing](https://developers.cloudflare.com/pages/configuration/preview-deployments/).
+
+Traceability: FR-10, FR-11; CON-01, CON-05, CON-06; NFR-07, NFR-08; Q-10; R-05, R-08.
+
+## 9. D-08 — Presentation, local images, accessibility, and SEO
+
+Owner-supplied logo requirement, 2026-11-02 (FR-09): the owner has now supplied a 900×900 black/white JPEG emblem. Keep its bytes/artwork unchanged as src/assets/club-logo.jpg, relocated from the supplied public downloads area. Import it into the shared layout and use Astro Image for small responsive WebP variants with intrinsic dimensions, eager loading and preserved proportions. Render it across all routes, including 404, within the accessible homepage link alongside the existing club name. Do not recolor or redraw the emblem; retain the light shared header and remove the obsolete pending-logo banner text.
+
+Color direction authorized on 2026-11-02: retain white/charcoal club styling and use red A-team / blue other-team accents. A small shared presentation helper checks the confirmed club ID and exact published A-team name; foreign clubs receive no Lokota accent. Discover team/competition IDs as before. Carry match team identities in generated feed entries so presentation does not infer a team from prose. Mixed A/other-team derbies show both accents. Keep official scoring, chronology, routes and API preparation unchanged. CSS variables centralize readable screen shades and pale table/tag backgrounds; names, weight and selection labels still identify teams without color. No new dependencies or client-side JavaScript are needed. Final appearance review remains pending; the supplied logo is integrated as described above.
+
+Later owner correction on 2026-11-02 supersedes the charcoal surfaces: the owner rejected the black-heavy overall appearance. Use white for the shared header/footer, a very light cool background, restrained blue-gray typography and a pale tournament panel; replace the thick black feed border with a light outline. Retain the approved team accents and existing content/layout behavior. Softer corners and lighter heading weights support this working light presentation. Verify contrast and phone/PC reflow; do not treat this correction as final visual approval or a new official brand palette.
+
+Build a sports-club layout around the news feed, readable result cards, clear team/competition labels, and tournament promotion. Use small reusable Astro components with plain CSS variables for spacing, type, and eventual verified brand colors. Start with neutral labelled development branding; do not treat a fetched logo or guessed palette as owner-approved assets. Prefer system fonts initially; local verified font files can be added only for a clear branding need. Core navigation can wrap or use a simple native control; it must not require a JavaScript framework or hamburger-menu application.
+
+Use Astro Image/Picture with local sources and build-time Sharp processing. Generate appropriate responsive widths without upscaling, reserve intrinsic dimensions, use WebP/fallback as appropriate, and lazy-load below-the-fold gallery images. Prioritize only the actual leading visible image. At about 20 photos/year this is proportionate; no image hosting, runtime resizing, or CDN image product is needed. The static build runs image processing on the build host, so Cloudflare runtime Sharp limitations do not justify an adapter or passthrough image service.
+
+Use a simple image grid with captions and normal links to a larger optimized image; no carousel/lightbox dependency. Keep photographs out of direct public storage when optimization is required. Original sizes and the actual Linux Pages image build still need validation when representative images exist. Resize excessively large source photographs before committing them, without imposing an external processing service.
+
+Phone/PC verification uses representative widths of 360, 390, 768, and 1440 CSS pixels, plus reflow at 320 pixels and 200% zoom. Use semantic headings/landmarks, skip navigation, keyboard-visible focus, labelled controls, and adequate text/interactive contrast. Tables retain captions/header meaning and use a clearly contained horizontal-scroll region where all columns cannot fit; the whole page must not overflow. Present essential match identity/result information in a readable compact form. These are engineering checks for the owner's usability requirement, not claims of certified accessibility.
+
+Generate Czech document language, unique titles/descriptions, canonical URL, and optional social cover metadata from known content. Sitemap/public-route generation excludes drafts. Production pages.dev noindex stays until launch approval; verify the final origin before indexing. Do not add analytics, cookie banners, external embeds, or third-party scripts absent a requirement.
+
+Sources: [Astro image handling](https://docs.astro.build/en/guides/images/). Traceability: FR-01–FR-04, FR-07–FR-09; NFR-01–NFR-04; Q-06, Q-09; R-06, R-07.
+
+## 10. D-09 — Verification and maintenance
+
+Use a proportionate set of checks rather than a broad testing framework:
+
+| Check | Meaningful behavior covered |
+| --- | --- |
+| Type/content validation | Strict TypeScript/Astro checking; valid calendar dates; image references/alt; duplicate/reserved slugs; edition range/current-marker rules; downloads existing within the approved area and size limit. |
+| Node unit tests with injected responses/clocks | Pagination/retry limits; request parameter construction; missing required includes; nullable optional data; unknown enums; result association by isHome; duplicate ids/sides; latest-season selection including future/empty/ambiguous cases. |
+| Table/normalization fixtures | Bare rounds vs wrapped collections; greatest-round/ALL selection; official ranks/points preserved; multiple club teams/derby; incomplete scores and empty tables; unrelated personal data excluded. |
+| Feed/date tests | Manual/generated merge; day-level tie-breaks; stable match keys; corrected/reopened/forfeited matches; unknown dates/times; no reordering from a rebuild; Prague date boundaries and DST display preservation. |
+| Production build and output check | Static output only, required routes/anchors/assets exist, public internal links/downloads resolve, drafts do not generate public routes/metadata, canonical/indexing policy matches context, and no fixture dataset is used in a release. |
+| Manual representative browser review | Phone/PC widths, keyboard navigation/focus, contained table scrolling, zoom, meaningful alternative text, and image/loading behavior. Record representative Lighthouse measurements as diagnostic evidence, without inventing an approved numerical score. |
+| Authorized deployment validation | PR preview, main publication, accepted-hook vs actual build outcome, API-failure build retaining existing production, manual recovery, and existing provider notifications. |
+
+Offline CI checks must not require the live API on every pull request: unit tests use fixtures and the type/content checks do not fetch sports data. Pages' actual preview/production build exercises the live preparation path. Build and output checks needing rendered HTML run as part of the Pages build as well as locally when a live build is requested. Do not add markup snapshot suites, coverage targets, browser automation dependencies, or daily remote API tests without an actual need.
+
+Update dependencies through reviewed lockfile changes, rerun the meaningful checks, and recheck API schemas on integration failures or planned upgrades. Use provider logs for actionable path/status/validation diagnostics without dumping raw payloads or hook URLs. Explicitly inspect unusual data-loss/empty states during live smoke checks; a schema cannot distinguish every upstream content deletion from a legitimate empty dataset without retained history.
+
+Traceability: NFR-05–NFR-09; FR-02–FR-04, FR-06, FR-07, FR-09–FR-11; R-01–R-08.
+
+## 11. D-10 — Future domain and historical content
+
+No historical import is needed now. Stable article slugs, publication dates, tournament years, and local asset references permit later addition of old content with normal Markdown entries. Do not create empty migration scripts, legacy URL mappings, or storage abstractions before real old data is available.
+
+The existing domain is preserved for a later authorized cutover. Before that cutover, confirm the registrar/DNS provider and zone records, existing MX/TXT/email-related CNAMEs, apex/www choice, HTTPS, canonical origin, and any important legacy URLs still serving traffic. Plan redirects only from verified old URLs, test the preview before changing records, and define a revert procedure that leaves email intact. No current DNS records, final hostname, TTL, credentials, or production changes are inferred from the API club web field. Existing DNS/email details and actual Cloudflare custom-domain constraints must be checked then.
+
+Traceability: CON-07; FR-08, FR-11; Q-08; R-07.
+
+## 12. Approved tradeoffs and remaining inputs
+
+The approved tradeoffs include the build-failure fallback in D-06 (old site remains online; new content waits during an API outage), the literal latest-published-season selection in D-05 (including a newly published future season), and the simple deterministic feed/content/table conventions above. Approval establishes the technical baseline; it does not claim that these behaviors are already implemented or deployed.
+
+Remaining inputs are verified branding and club/venue/contact content, initial articles/photographs, the actual Žižkova 200 edition/dates/results/files, future custom domain, and Q-10 account access/quotas. None requires speculative infrastructure to draft the architecture. API wall-time semantics remain a documented display assumption; current highest-round cumulative table behavior has documentation and live evidence but must remain covered by boundary checks.
+
+Approval record: the owner explicitly responded "approved" on 2026-11-02 after receiving the design and its review tradeoffs. The task breakdown has subsequently been created in [tasks.md](tasks.md), with D-01–D-10/requirement references, verification, and status. The owner approved the task plan with "approved" on 2026-11-02, authorizing local implementation T-01–T-12. External setup/launch T-13/T-14 remain deferred.
+
+
+## Implementation compatibility record — 2026-11-02
+
+T-01–T-12 follow D-01–D-10; task-level evidence and limitations are in [tasks.md](tasks.md), and commands/content examples in [README.md](../README.md). Selected patches: Node 24.22.2, npm 11.19.1, TypeScript 6.0.3, @astrojs/check 0.9.12 and @types/node 24.19.2. The Node declarations are necessary development-only tooling for typed Node build scripts/tests. TypeScript 7 is outside the current check tool's peer range, so it is not selected.
+
+Astro 7's ordinary collection/page filtering still emitted a draft's original image during the editorial smoke test. A small published-glob loader wrapper validates entries but excludes drafts before they enter the public content/asset store. The smoke check verifies draft text/routes/original images are absent. No extra Markdown processor was needed: ordinary CSS and focusable overflow regions support authored result tables using Astro's default Markdown rendering.
+
+Offline fixture builds use .cache/offline-dist, separate from the release dist artifact, and are forbidden in Pages context. The release build always performs fresh live preparation; no durable snapshot or fallback service was introduced. Temporary UI examples were removed. Deployment configuration/verification, daily scheduling, real branding/content and domain work remain T-13/T-14, not completed infrastructure.
+
+Visual review update, 2026-11-02: the owner accepted the functional work and rejected its appearance. Within D-02/D-08, a compact news-first grayscale revision removes the decorative hero/monogram and simplifies the shared layout. Functionality and technical decisions are unchanged. Its local checks are recorded in tasks.md; appearance approval is pending, and no preference was inferred from the unanswered direction prompt.
+
+Feed presentation refinement authorized on 2026-11-02 (D-02/D-03/D-08; FR-01–FR-04/FR-09): every feed row has a visual tile, with a responsive optional article photograph or the supplied club emblem, or an official score tile for match summaries. Carry validated home/away point values into the feed view model rather than parsing summary prose. Team accents are A red, B blue, C green, D purple and E orange, keyed by published team suffix and confirmed club identity, never seasonal IDs. Unknown team names stay neutral until mapped; mixed fixtures use the actual pair of colors in stable home/away order. Names/letter badges supplement colors. Remove the unused nickname and its inflections from visitor-facing text, accessible names and metadata, using the confirmed club name; retain internal repository identifiers. This is owner-authorized local implementation, with no CMS, dependencies or additional runtime infrastructure.

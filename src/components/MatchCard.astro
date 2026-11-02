@@ -1,0 +1,17 @@
+---
+import type { Match } from '../lib/sports.ts';
+import { score, statusLabels } from '../lib/sports.ts';
+import { formatDate } from '../lib/dates.ts';
+import { site } from '../site.ts';
+import { teamAccent, matchAppearance } from '../lib/team-colors.ts';
+interface Props { match: Match; anchor?: boolean; }
+const { match, anchor = true } = Astro.props;
+const completed = ['FINISHED', 'FORFEIT', 'IN_PROGRESS'].includes(match.status);
+const appearance = matchAppearance([match.homeTeam, match.awayTeam]);
+---
+<article class="match-card" data-team-color={appearance.accent} style={appearance.style} id={anchor ? `zapas-${match.id}` : undefined}>
+  <div class="match-meta"><span>{match.date ? <time datetime={match.date}>{formatDate(match.date)}</time> : 'Termín bude upřesněn'}{match.time ? ` · ${match.time}` : ' · Čas bude upřesněn'}</span><span class="tag">{statusLabels[match.status]}</span></div>
+  <div class="match-teams"><span class:list={{ 'club-team': match.homeTeam.club.id === site.clubId }} data-team-color={teamAccent(match.homeTeam)}>{match.homeTeam.name}<small>Domácí</small></span><strong class="score" aria-label="Body domácí : hosté">{completed ? score(match) : 'vs'}</strong><span class:list={{ 'club-team': match.awayTeam.club.id === site.clubId }} data-team-color={teamAccent(match.awayTeam)}>{match.awayTeam.name}<small>Hosté</small></span></div>
+  {completed && <p class="score-detail">Body · Kuželky {score(match, 'totalPerformance')} · Sety {score(match, 'totalSetPoints')}</p>}
+  <p class="match-venue">{match.venue ? [match.venue.name, match.venue.street, match.venue.city].filter(Boolean).join(', ') : 'Místo bude upřesněno'}{match.round && ` · ${match.round}. kolo`}</p>
+</article>

@@ -1,0 +1,7 @@
+---
+import { Image, getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+interface Props { pictures: { src: ImageMetadata; alt: string; caption?: string }[]; }
+const pictures = await Promise.all(Astro.props.pictures.map(async picture => ({ ...picture, large: await getImage({ src: picture.src, width: Math.min(picture.src.width, 1600), format: 'webp' }) })));
+---
+{pictures.length > 0 && <section aria-label="Fotogalerie" class="gallery">{pictures.map(picture => <figure><a href={picture.large.src} aria-label={`Zvětšit fotografii: ${picture.alt}`}><Image src={picture.src} alt={picture.alt} width={Math.min(picture.src.width, 640)} layout="constrained" loading="lazy" /></a>{picture.caption && <figcaption>{picture.caption}</figcaption>}</figure>)}</section>}

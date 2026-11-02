@@ -1,0 +1,6 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { publicContent } from '../../lib/content.ts';
+const { tournaments } = await publicContent();
+---
+<Layout title="Archiv Žižkovy 200" description="Minulé ročníky klubového turnaje dvojic Žižkova 200."><header class="page-heading"><a href="/zizkova-200/" class="text-link">← Žižkova 200</a><h1>Archiv turnaje</h1><p>Ročníky, výsledky a vzpomínky z drah.</p></header><div class="reading-wide">{tournaments.length ? <ul class="edition-list">{tournaments.map(e => <li><a href={`/zizkova-200/${e.data.year}/`}><strong>{e.data.year}</strong><span>{e.data.name}</span><span aria-hidden="true">↗</span></a></li>)}</ul> : <div class="empty-state"><h2>Archiv zatím čeká na podklady</h2><p>Starší ročníky zde mohou být postupně doplněny.</p></div>}</div></Layout>

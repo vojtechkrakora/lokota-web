@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Edition from '../../components/Edition.astro';
+import { publicContent } from '../../lib/content.ts';
+export async function getStaticPaths() { return (await publicContent()).tournaments.map(entry => ({ params: { year: String(entry.data.year) }, props: { entry } })); }
+const { entry } = Astro.props;
+---
+<Layout title={`${entry.data.name} ${entry.data.year}`} description={entry.data.description}><header class="page-heading"><a href="/zizkova-200/" class="text-link">← Žižkova 200</a><h1>Ročník {entry.data.year}</h1></header><div class="reading-wide"><Edition entry={entry} /><a href="/zizkova-200/archiv/" class="text-link">Archiv všech ročníků ↗</a></div></Layout>

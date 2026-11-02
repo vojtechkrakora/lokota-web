@@ -1,0 +1,14 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Gallery from '../components/Gallery.astro';
+export async function getStaticPaths() {
+  const entries = await getCollection('club');
+  return ['klub', 'historie', 'kontakt', 'herna'].map(page => ({ params: { clubPage: page }, props: { entry: entries.find(e => e.data.page === page), page } }));
+}
+const { entry, page } = Astro.props;
+const result = entry ? await render(entry) : undefined;
+const Content = result?.Content;
+const names: Record<string, string> = { klub: 'O klubu', historie: 'Historie klubu', kontakt: 'Kontakt', herna: 'Kuželna' };
+---
+<Layout title={entry?.data.title ?? names[page]!} description={entry?.data.summary ?? 'Informace o KK Lokomotiva Tábor připravujeme.'}><header class="page-heading"><p class="eyebrow">KK Lokomotiva Tábor</p><h1>{entry?.data.title ?? names[page]}</h1></header><nav class="section-nav" aria-label="O klubu">{Object.entries(names).map(([path, name]) => <a href={`/${path}/`} aria-current={page === path ? 'page' : undefined}>{name}</a>)}</nav><div class="reading-wide"><div class="prose">{Content ? <Content /> : <p>Ověřené informace připravujeme.</p>}</div>{entry && <Gallery pictures={entry.data.gallery} />}</div></Layout>

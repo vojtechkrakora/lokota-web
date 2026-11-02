@@ -1,0 +1,49 @@
+---
+import '../styles/global.css';
+import { Image } from 'astro:assets';
+import clubLogo from '../assets/club-logo.jpg';
+import { navigation, site, publishingContext } from '../site.ts';
+import { readSports } from '../lib/sports-data.ts';
+import { formatUpdated } from '../lib/dates.ts';
+interface Props { title: string; description: string; image?: string; noCanonical?: boolean; }
+const { title, description, image } = Astro.props;
+const sports = readSports();
+const context = publishingContext(process.env);
+const canonical = context.origin && !Astro.props.noCanonical ? new URL(Astro.url.pathname, context.origin).href : undefined;
+const active = (path: string) => Astro.url.pathname.startsWith(path);
+---
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} | {site.clubName}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:locale" content="cs_CZ" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={`${title} | ${site.clubName}`} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {image && context.origin && <meta property="og:image" content={new URL(image, context.origin).href} />}
+  </head>
+  <body data-sports-provenance={sports.provenance}>
+    <a href="#obsah" class="skip-link">Přejít na obsah</a>
+    <div class="development"><div class="container">Pracovní verze webu{sports.provenance === 'fixture' && ' · TESTOVACÍ SPORTOVNÍ DATA'}</div></div>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="/" class="brand" aria-label={`${site.clubName} — úvodní stránka`}><Image src={clubLogo} alt="Logo KK Lokomotiva Tábor" class="brand-logo" width={80} height={80} widths={[64, 80, 128, 160, 240]} sizes="(max-width: 760px) 64px, 80px" format="webp" quality={90} loading="eager" /><span class="brand-name"><strong>{site.name}</strong><small>Kuželkářský klub</small></span></a>
+        <nav aria-label="Hlavní navigace"><ul>{navigation.map(([label, href]) => <li><a href={href} aria-current={active(href) ? 'page' : undefined}>{label}</a></li>)}</ul></nav>
+      </div>
+    </header>
+    <main id="obsah" class="container" tabindex="-1"><slot /></main>
+    <footer class="site-footer">
+      <div class="container footer-grid"><div><a href="/" class="footer-brand">{site.name}</a><p class="small">{site.clubName}</p></div>
+        <nav aria-label="Informace o klubu"><a href="/klub/">O klubu</a><a href="/historie/">Historie</a><a href="/kontakt/">Kontakt</a><a href="/herna/">Kuželna</a></nav>
+        <div class="data-note"><p>Sportovní data aktualizována <time datetime={sports.fetchedAt}>{formatUpdated(sports.fetchedAt)}</time> (Praha).</p><p class="small">Zdroj: <a href="https://kuzelky.cz/">Česká kuželkářská asociace</a> · sezóna {sports.season.name}. Data se obnovují při sestavení webu.</p></div>
+      </div>
+    </footer>
+  </body>
+</html>

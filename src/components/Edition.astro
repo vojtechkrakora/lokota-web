@@ -1,0 +1,14 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import Gallery from './Gallery.astro';
+import { formatDate } from '../lib/dates.ts';
+interface Props { entry: CollectionEntry<'tournaments'>; }
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const hasResults = /^#{1,6}\s+Výsledky\s*$/im.test(entry.body ?? '');
+const hasTable = /^\s*\|.+\|/m.test(entry.body ?? '');
+---
+<article class="edition"><p class="eyebrow">Ročník {entry.data.year}</p><h2>{entry.data.name} {entry.data.year}</h2><p class="lead">{entry.data.description}</p><p class="edition-date">{entry.data.startDate ? `${formatDate(entry.data.startDate)}${entry.data.endDate && entry.data.endDate !== entry.data.startDate ? ` — ${formatDate(entry.data.endDate)}` : ''}` : 'Termín bude oznámen.'}</p>
+{entry.data.qualifiesForMcr === true && <p class="notice">Tento ročník je kvalifikační na MČR.</p>}{entry.data.qualifiesForMcr === false && <p class="small">Tento ročník není kvalifikační na MČR.</p>}
+<div class="prose" tabindex={hasTable ? 0 : undefined} role={hasTable ? 'region' : undefined} aria-label={hasTable ? 'Propozice a výsledky — tabulku lze posunout do strany' : undefined}><Content /></div>{!hasResults && <section class="empty-state"><h3>Výsledky</h3><p>Výsledky tohoto ročníku zatím nebyly zveřejněny.</p></section>}
+{entry.data.downloads.length > 0 && <section class="downloads"><h3>Ke stažení</h3><ul>{entry.data.downloads.map(file => <li><a href={file.path} download>{file.label} ↓</a></li>)}</ul></section>}<Gallery pictures={entry.data.gallery} /></article>

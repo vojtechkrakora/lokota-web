@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { readSports } from '../lib/sports-data.ts';
+import { number } from '../lib/dates.ts';
+import { site } from '../site.ts';
+import { teamAccent } from '../lib/team-colors.ts';
+const sports = readSports();
+---
+<Layout title="Ligové tabulky" description="Aktuální oficiální ligové tabulky soutěží KK Lokomotiva Tábor."><header class="page-heading"><p class="eyebrow">Sezóna {sports.season.name}</p><h1>Jak si stojíme</h1><p>Oficiální tabulky ČKA. Naše družstva jsou zvýrazněná.</p></header>
+{sports.competitions.map(({ competition, rows }) => <section class="competition-section" id={`soutez-${competition.id}`}><div class="section-heading"><h2>{competition.name}</h2><a href={`/zapasy/#soutez-${competition.id}`} class="text-link">Zápasy ↗</a></div>{rows.length ? <><p class="small table-help">Na telefonu posuňte tabulku do strany pro další sloupce.</p><div class="table-scroll" tabindex="0" role="region" aria-label={`Tabulka ${competition.name}`}><table><caption>{competition.name} · aktuální oficiální tabulka · {sports.season.name}</caption><thead><tr><th scope="col">Poř.</th><th scope="col">Družstvo</th><th scope="col"><abbr title="Odehrané zápasy">Z</abbr></th><th scope="col"><abbr title="Výhry">V</abbr></th><th scope="col"><abbr title="Remízy">R</abbr></th><th scope="col"><abbr title="Prohry">P</abbr></th><th scope="col">Body</th><th scope="col">Skóre na body</th></tr></thead><tbody>{rows.map(row => <tr class:list={{ 'our-team': row.team.club.id === site.clubId }} data-team-color={teamAccent(row.team)}><td>{row.position}.</td><th scope="row">{row.team.name}{row.team.club.id === site.clubId && <span class="sr-only"> — naše družstvo</span>}</th><td>{row.matches}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td><td><strong>{number(row.tablePoints)}</strong></td><td class="nowrap">{number(row.teamPointsWon)} : {number(row.teamPointsLost)}</td></tr>)}</tbody></table></div></> : <div class="empty-state"><p>Oficiální tabulka zatím není k dispozici.</p></div>}</section>)}
+{!sports.competitions.length && <div class="empty-state"><h2>Sezóna se připravuje</h2><p>Tabulky se zobrazí, jakmile budou zveřejněné soutěže našich družstev.</p></div>}
+<p class="small page-note">Pořadí i body přebíráme od ČKA a nepřepočítáváme je. Po skončení zápasu může aktualizace u zdroje chvíli trvat.</p></Layout>

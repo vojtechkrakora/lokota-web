@@ -1,6 +1,6 @@
 # Lokota Web — initial requirements
 
-Status: **initial requirements baseline approved by the owner on 2026-11-01; subsequent owner clarifications incorporated; not approved for implementation**.
+Status: **requirements baseline approved on 2026-11-01; clarifications incorporated; technical design approved on 2026-11-02; local tasks T-01–T-12 implemented and locally verified on 2026-11-02; external setup/launch deferred**.
 Baseline and investigation date: 2026-11-01.
 Source of product requirements: the owner's complete Lokota Web project brief and subsequent Q-01–Q-10 answers supplied in this conversation. The clarification answers supersede the original brief where scope changes. External documentation verifies feasibility and API facts; it does not add product scope.
 
@@ -8,16 +8,16 @@ Source of product requirements: the owner's complete Lokota Web project brief an
 
 Replace the existing Lokota website with a modern, professional, fast, accessible, responsive Czech-language website for a Czech nine-pin bowling club. Primary audiences are members, players, supporters, and visitors seeking club activities, match information, and results. One experienced developer, assisted by AI coding tools, should be able to maintain it with minimal operational work.
 
-The constitution is [AGENTS.md](../AGENTS.md). This specification is the requirements baseline. After clarification and requirements approval, the next deliverable is docs/architecture.md; only after design approval should docs/tasks.md be created. Later design decisions and tasks must reference the IDs below. Implementation requires approved specifications and authorization for that phase.
+The constitution is [AGENTS.md](../AGENTS.md). This specification is the requirements baseline. Following clarification and requirements approval, the technical design in [architecture.md](architecture.md) was approved, and [tasks.md](tasks.md) now records the approved implementation breakdown. Design decisions and tasks reference the IDs below. Implementation requires approved specifications/tasks and authorization for that phase.
 
-This phase creates only the constitution and this specification. It does not scaffold Astro, install tooling, implement a client or website, create deployment workflows, provision Cloudflare resources, or alter DNS. No SDD framework or CLI will be installed.
+The initial documentation phase created only the constitution and this specification. The owner authorized continuing with technical design on 2026-11-02, then approved it; task planning followed. These documentation phases do not scaffold Astro, install tooling, implement a client or website, create deployment workflows, provision Cloudflare resources, or alter DNS. No SDD framework or CLI will be installed.
 
 ## 2. Repository investigation
 
-- The local repository is empty: no tracked project files, application, documentation, content, branding assets, package manifest, or test configuration were found before this change.
-- Git reports an unborn local main branch with no commits. The configured origin is the supplied vojtechkrakora/lokota-web GitHub SSH remote; its remote main tracking reference is reported as gone. This does not verify GitHub visibility, permissions, or deployment integration.
+- At the initial investigation, the local repository was empty: no tracked project files, application, documentation, content, branding assets, package manifest, or test configuration were found.
+- At initialization, Git reported an unborn local main branch with no commits. The initial documentation was subsequently committed as 818a9e8. The configured origin is the supplied vojtechkrakora/lokota-web GitHub SSH remote; its remote main tracking reference was reported as gone. This does not verify GitHub visibility, permissions, or deployment integration.
 - No repository Spec Kit/SDD files or existing agent instructions were found, including ancestor AGENTS.md files. Neither a specify nor spec-kit executable was detected on PATH.
-- Adopt the lightweight Markdown structure above, consistent with the user's explicit instruction. Architecture and task files are intentionally deferred.
+- Adopt the lightweight Markdown structure above, consistent with the user's explicit instruction. The architecture is now approved, and the task breakdown is approved for local implementation.
 
 ## 3. Confirmed constraints
 
@@ -38,15 +38,15 @@ The following are confirmed baseline requirements. Acceptance criteria describe 
 
 ### FR-01 — Homepage and navigation
 
-Make a news feed the primary homepage content. Combine manually authored club news with automatically generated information about completed club matches, ordered by date with the newest item first. Present club identity/branding, annual tournament information, and clear navigation. Keep next-match and standings information accessible as supporting content; a single featured team is not the organizing principle of the feed.
+Make a news feed the primary homepage content. Combine manually authored club news with automatically generated information about completed club matches, ordered by date with the newest item first. Present club identity/branding, annual tournament information, and clear navigation. Show the A-team's current official league table directly on the homepage with the A-team row highlighted. Keep next-match and other teams' standings accessible as supporting content; the feed continues to cover all club teams.
 
 Acceptance: manual articles and generated match summaries appear together in descending date order. A rebuild alone does not move an old match above newer news or duplicate its summary. Generated entries identify the team, opponent, competition, and available official result; their text is factual and derived from verified data without requiring a generative-AI service. Use article publication dates and match dates as the editorial chronology; exact time/tie handling belongs in design. Corrected results update the same match entry. A visitor can reach news, matches/results, standings, tournament information, and club information through Czech navigation. Missing matches or tables produce understandable empty states.
 
 ### FR-02 — News and articles
 
-Articles support title, publication date, optional author, summary, main content, cover image, optional gallery, and optional draft/published status. Provide reverse chronological listing, detail pages, and an archive.
+Articles support title, publication date, optional author, summary, main content, optional cover image, optional gallery, and optional draft/published status. Provide reverse chronological listing, detail pages, and an archive.
 
-Acceptance: adding a valid article and its assets produces the listing entry, detail page, and archive entry without application code changes. Optional author/gallery omissions work. Under the editorial defaults chosen using the owner's Q-06 delegation, articles are published unless explicitly marked as drafts; drafts are excluded from production listings, detail routes, and public metadata. A special draft-preview mode is deferred. Publishing is still controlled by committing and deploying content; no CMS or upload interface is needed.
+Acceptance: adding a valid article and its assets produces the listing entry, detail page, and archive entry without application code changes. Optional author/cover/gallery omissions work. With no cover, use the supplied club emblem in the feed thumbnail; a supplied cover still requires a local image and meaningful alternative text. Every feed entry has a visual tile: a photo or club emblem for news, official home/away points for results. Preserve zero and fractional points and identify teams without relying on color alone. Under the editorial defaults chosen using the owner's Q-06 delegation, articles are published unless explicitly marked as drafts; drafts are excluded from production listings, detail routes, and public metadata. A special draft-preview mode is deferred. Publishing is still controlled by committing and deploying content; no CMS or upload interface is needed.
 
 ### FR-03 — Matches, results, and teams
 
@@ -57,6 +57,8 @@ Acceptance: data for the confirmed club includes both home and away matches and 
 ### FR-04 — League standings
 
 Display the official standings relevant to club teams; do not recalculate them when provided by ČKA. Make the tables usable on mobile.
+
+Homepage acceptance (owner clarification, 2026-11-02): show all rows of the A-team's latest-season league table in a compact form, including official rank, team, matches played and points. Highlight the A-team row with text/weight as well as background, and link to the complete standings. Resolve the team through the confirmed club identity and its published name, without a fixed seasonal team/competition ID. Missing A-team or table data produces an honest empty state without substituting another team or an older season.
 
 Acceptance: displayed ranks and points match the selected official competition, season, round, and table type. Club teams are identifiable, column meaning remains clear on small screens, and absent standings have a clear empty state. Define selection of the current usable round before implementation (Q-03).
 
@@ -87,6 +89,8 @@ Acceptance: supplied verified information is available through Czech navigation;
 ### FR-09 — Content and photographs
 
 Keep manual content structured, human-readable, validated, and versioned in Git. Prefer Markdown/frontmatter and Astro Content Collections. Support cover images and simple galleries for approximately 20 photographs per year; store photographs locally in the repository and optimize delivery with responsive sizes where practical.
+
+Branding clarification, 2026-11-02: the owner supplied the club logo as kkLokomotivaTabor.jpg on 2026-11-02. Display it in the shared header on every page on phones and PCs, with an accessible home link and preserved aspect ratio. Its original black/white artwork remains unchanged. The source is maintained as src/assets/club-logo.jpg for built-in Astro optimization; the temporary text wordmark may accompany the actual emblem. The owner confirmed red/black for the A team and blue/white for other teams, then authorized team accents with "Let's do the colors whing". Subsequent feedback explicitly rejected the overall use of black. Use a light overall presentation with a white header, light backgrounds and no dominant black panels or heavy black rules; retain red A-team and blue other-team accents and neutral general club news. Preserve readable team names and non-color selection cues. Mixed-team matches must represent both team colors. Exact screen shades are implementation choices for readability, not a claim of official brand color codes. Later owner instructions on 2026-11-02 supersede the shared blue accent for B–E: assign a distinct web color to every current team, with A red. Chosen presentation palette: A red, B blue, C green, D purple, E orange; these are UI distinctions, not uniform/brand claims. Derbies retain both actual team colors. Remove the nickname Lokota and its inflections from all visitor-facing copy, accessible names and metadata; use KK Lokomotiva Tábor or ordinary club wording. Keep repository identifiers unchanged. Final appearance acceptance remains pending.
 
 Acceptance: the maintainer can add an article or tournament edition using content/assets alone. Invalid required fields and broken local image/file references are reported before publishing. Informative images have meaningful alternative text. Cover images and galleries work at mobile and desktop widths without external image hosting or processing services. Keep future AI/MCP publishing possible through clear content conventions, without implementing integration now.
 
@@ -187,7 +191,7 @@ The [current Astro Cloudflare guide](https://docs.astro.build/en/guides/deploy/c
 - **A-04:** resolved in scope: Žižkova 200 results must be readable on-page, with optional downloadable files. A plain Markdown results table and repository attachments are the simplest initial authoring defaults; actual result structure and tie rules must not be invented.
 - **A-05:** approximately 20 photos/year is the expected volume; original file sizes, attachment sizes, and archive growth remain unknown.
 - **A-06:** editorial defaults selected under the owner's Q-06 instruction to use best judgment: publish articles unless explicitly marked draft; exclude drafts from all public production output; defer special draft previews; use neutral development placeholders until verified assets arrive. These are delegated defaults, not claims that assets were supplied.
-- **A-07:** generated match summaries use stable match identity and match dates rather than rebuild dates; render factual official data through simple templates. No external AI generation service is needed. Exact feed ordering for equal dates belongs in technical design.
+- **A-07:** generated match summaries use stable match identity and match dates rather than rebuild dates; render factual official data through simple templates. No external AI generation service is needed. The approved D-02 design orders equal dates manual-first, then by stable source key.
 
 ## 8. Clarification answers and remaining questions
 
@@ -196,14 +200,14 @@ The owner supplied Q-01–Q-10 answers after reviewing the initial baseline. The
 | ID | Owner answer / resulting scope | Status and remaining work |
 | --- | --- | --- |
 | Q-01 | Yes: Lokota is KK Lokomotiva Tábor, matching inspected club 279. | Identity resolved. Custom domain, official assets, and venue/contact source material remain later content/launch inputs. |
-| Q-02 | Homepage is news: manually authored news and automatically generated last-match information together, newest by date first. | Homepage direction resolved. Default to discovered club teams without a primary-team restriction; define deterministic dates, deduplication, and pagination in design. |
-| Q-03 | Always use the latest season. | Product preference resolved. Investigate reliable chronological season ordering, active/upcoming overlap, latest usable official standings round, and match-time semantics during design. |
-| Q-04 | Ideally refresh once per day. | Frequency resolved as a target. Design the exact schedule, failure/first-build behavior, and freshness indication within available quotas. |
+| Q-02 | Homepage is news: manually authored news and automatically generated last-match information together, newest by date first. | Resolved in D-02: discovered club teams, deterministic date/key ordering, deduplication, and 10-item pagination. |
+| Q-03 | Always use the latest season. | D-05 defines chronological season selection, including future/empty seasons, and the highest configured round's official ALL table. Prague wall-time display remains a documented convention pending stronger API timezone evidence. |
+| Q-04 | Ideally refresh once per day. | D-06/D-07 define the daily schedule, timestamp label, first-build failure, and preservation of the previous deployment on required API failure. Actual account quotas remain Q-10. |
 | Q-05 | Player details are not wanted for now. | Defer individual player pages, member biographies/directory, and the player-statistics section from the initial release. Public player endpoints are not needed for initial team summaries. |
 | Q-06 | The owner delegated the unclear editorial choices: use best judgment. | Defaults recorded in A-06. No further editorial-preference question blocks design. Real branding, articles, and other source content are still to be supplied or verified. |
-| Q-07 | Žižkova 200: doubles, 200 hs sdružených; may or may not qualify for MČR. Results on-page with optional downloadable files. | Core scope resolved. Current edition/year/dates, actual results/columns, any qualification statement, and files remain content inputs. Choose a simple results format/current-edition convention during design. |
+| Q-07 | Žižkova 200: doubles, 200 hs sdružených; may or may not qualify for MČR. Results on-page with optional downloadable files. | D-03 selects Markdown results, optional repository downloads, and an explicit current marker with greatest-published-year fallback. Actual edition/year/dates, results/columns, qualification statement, and files remain content inputs. |
 | Q-08 | No migration now; allow old data to be added later when needed. | Initial migration scope resolved. Support ordinary historical-content additions; defer import tools, redirect inventory, and DNS/email details until relevant. |
-| Q-09 | Must work well on phones and PCs. | Device/usability direction resolved. Choose representative viewport/keyboard/performance checks in design; do not claim an approved certification or numerical score. |
+| Q-09 | Must work well on phones and PCs. | D-08/D-09 define representative viewports, reflow/zoom, keyboard/accessibility checks, and diagnostic performance measurements. No certification or numerical score target is claimed. |
 | Q-10 | The owner cannot answer account/allowance questions now. | Explicitly deferred until deployment planning. Design can use documented limits provisionally; verify actual account access, repository visibility, and allowances before configuration or enabling automation. |
 
 ## 9. Technical risks and required design evidence
@@ -223,6 +227,10 @@ The owner supplied Q-01–Q-10 answers after reviewing the initial baseline. The
 
 Initial-phase completion criteria: only AGENTS.md and this specification are created; confirmed scope and acceptance criteria are traceable; assumptions/questions/risks remain distinct from facts; public API investigation and hosting feasibility are recorded with their limits; no application or infrastructure changes occur. The owner has reviewed and approved this initial baseline.
 
-Recommended next action: technical design using the confirmed club, combined news/match homepage feed, latest-season default, daily refresh target, and clarified tournament scope. When authorized, create docs/architecture.md covering content models, page responsibilities, verified API contracts/discovery, date/season/feed policy, refresh/fallback alternatives, image handling, deployment/future domain cutover, and proportionate phone/PC verification. Investigate technical uncertainties there; carry missing source content and Q-10 account details as explicit later prerequisites. Do not create tasks until the design is approved; do not begin implementation automatically.
+Technical design was authorized and approved on 2026-11-02 in [architecture.md](architecture.md), with D-01–D-10 tracing these requirements to content models, routes/feed, verified ČKA contracts, season/table/date policies, refresh/outage handling, images, deployment/future domain cutover, and verification. The approved outage behavior retains the previous deployment while delaying new content publication. The next deliverable, [tasks.md](tasks.md), is approved for local implementation. Missing source content and Q-10 account details remain explicit later prerequisites, with external setup/launch tasks deferred. Do not begin implementation automatically from design approval alone.
 
-Approval record: on 2026-11-01, the owner confirmed in this conversation, "i made a review and is ok", approving the initial constitution and requirements baseline. The owner then supplied the Q-01–Q-10 answers recorded above, confirming club identity and updating homepage, season, refresh, player-feature, tournament, migration, and device scope, with editorial choices delegated and account details deferred. These clarifications do not authorize implementation. No technical design or implementation task breakdown has been approved or produced.
+Approval record: on 2026-11-01, the owner confirmed in this conversation, "i made a review and is ok", approving the initial constitution and requirements baseline. The owner then supplied the Q-01–Q-10 answers recorded above, confirming club identity and updating homepage, season, refresh, player-feature, tournament, migration, and device scope, with editorial choices delegated and account details deferred. On 2026-11-02, "you can continue" authorized technical design and the subsequent "approved" accepted that design. The task breakdown was explicitly approved with "approved" on 2026-11-02, authorizing local implementation T-01–T-12. External setup/launch T-13/T-14 remain deferred.
+
+Implementation evidence: local tasks T-01–T-12 and their checks are recorded in [tasks.md](tasks.md). This does not establish launch readiness or complete deferred account/deployment/content/domain inputs. No new product requirements were added during implementation.
+
+Visual review update, 2026-11-02: the owner stated "design is tragic, but everythink else is OK". This accepts the functional work and reopens visual acceptance under FR-01/FR-09 and NFR-01–NFR-03. The revised presentation is ready for review; the technical baseline and product scope are unchanged.

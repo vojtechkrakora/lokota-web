@@ -1,0 +1,13 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Feed from '../../../components/Feed.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { feedContent } from '../../../lib/content.ts';
+import { paginate } from '../../../lib/feed.ts';
+export async function getStaticPaths() {
+  const { feed, news } = await feedContent();
+  return paginate(feed).slice(1).map(page => ({ params: { page: String(page.number) }, props: { page, news } }));
+}
+const { page, news } = Astro.props;
+---
+<Layout title={`Novinky — strana ${page.number}`} description="Starší klubové zprávy a oficiální výsledky zápasů KK Lokomotiva Tábor."><header class="page-heading"><p class="eyebrow">Klubové dění</p><h1>Novinky</h1><p>Strana {page.number}</p></header><div class="reading-wide"><h2 class="sr-only">Starší zprávy</h2><Feed items={page.items} news={news} /><Pagination page={page.number} total={page.total} /></div></Layout>

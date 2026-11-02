@@ -1,0 +1,14 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import Feed from '../../../../components/Feed.astro';
+import Pagination from '../../../../components/Pagination.astro';
+import { publicContent } from '../../../../lib/content.ts';
+import { paginate } from '../../../../lib/feed.ts';
+export async function getStaticPaths() {
+  const { news } = await publicContent();
+  return [...new Set(news.map(n => n.data.publicationDate.slice(0, 4)))].flatMap(year => paginate(news.filter(n => n.data.publicationDate.startsWith(year))).map(page => ({ params: { year, page: page.number === 1 ? undefined : `strana/${page.number}` }, props: { page, year } })));
+}
+const { page, year } = Astro.props;
+const feed = page.items.map(e => ({ key: `news-${e.data.slug}`, kind: 'news' as const, date: e.data.publicationDate, title: e.data.title, summary: e.data.summary, href: `/novinky/${e.data.slug}/` }));
+---
+<Layout title={`Archiv ${year}${page.number > 1 ? ` — strana ${page.number}` : ''}`} description={`Klubové články KK Lokomotiva Tábor z roku ${year}.`}><header class="page-heading"><a href="/novinky/" class="text-link">← Novinky</a><h1>Archiv {year}</h1><p>Klubové články z minulých let.</p></header><div class="reading-wide"><h2 class="sr-only">Články</h2><Feed items={feed} news={page.items} /><Pagination page={page.number} total={page.total} base={`/novinky/archiv/${year}/`} /></div></Layout>

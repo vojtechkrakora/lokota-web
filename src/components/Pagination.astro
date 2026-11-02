@@ -1,0 +1,6 @@
+---
+interface Props { page: number; total: number; base?: string; }
+const { page, total, base = '/novinky/' } = Astro.props;
+const url = (n: number) => n === 1 ? base : `${base}strana/${n}/`;
+---
+{total > 1 && <nav class="pagination" aria-label="Stránkování novinek">{page > 1 ? <a href={url(page - 1)} rel="prev">← Novější</a> : <span />}<span>Strana {page} z {total}</span>{page < total ? <a href={url(page + 1)} rel="next">Starší →</a> : <span />}</nav>}
