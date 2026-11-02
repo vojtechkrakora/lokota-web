@@ -186,6 +186,51 @@
   .prose h2, .prose h3 { margin-block: 28px 15px; }
   .prose p, .prose ul, .prose ol, .prose blockquote { margin-block: 0 20px; }
   .prose table { margin-block: 20px; background: var(--white); }
+  .match-scorecard { margin-block: 28px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+  .scorecard-summary { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: center; padding: 20px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); }
+  .match-scorecard .scorecard-summary p { margin: 0; display: grid; gap: 4px; font-size: .9rem; }
+  .scorecard-summary > :last-child { text-align: right; }
+  .scorecard-summary span { color: var(--muted); font-size: .75rem; }
+  .match-scorecard .scorecard-result { text-align: center; }
+  .scorecard-result strong { font-size: 2rem; line-height: 1.1; color: var(--heading); }
+  .match-scorecard .scorecard-help { margin-block: 16px; font-size: .85rem; color: var(--muted); }
+  .scorecard-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .lane-key { padding: 5px 9px; border-radius: 5px; font-size: .75rem; }
+  .match-scorecard .scorecard-duels, .match-scorecard .lane-results { list-style: none; padding: 0; margin: 0; }
+  .scorecard-duels { display: grid; gap: 20px; }
+  .scorecard-duel { min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); overflow: hidden; }
+  .duel-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: center; padding: 12px 20px; background: #edf3f8; border-bottom: 1px solid var(--line); }
+  .match-scorecard .duel-heading h3 { margin: 0; font-size: .9rem; }
+  .match-scorecard .duel-heading p { margin: 0; display: flex; align-items: center; gap: 12px; font-size: .85rem; }
+  .duel-heading strong { color: var(--heading); font-size: 1.2rem; }
+  .duel-players { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scorecard-player { padding: 20px; min-width: 0; }
+  .scorecard-player + .scorecard-player { border-inline-start: 1px solid var(--line); }
+  .scorecard-player-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; margin-bottom: 16px; }
+  .scorecard-player-heading > div { min-width: 0; flex: 1 1 8rem; }
+  .player-side { display: block; font-size: .75rem; color: var(--muted); margin-bottom: 4px; }
+  .scorecard-player h4 { margin: 0; font-size: 1.05rem; line-height: 1.35; color: var(--heading); }
+  .match-scorecard .player-total { margin: 0; display: grid; text-align: right; line-height: 1.2; }
+  .player-total strong { font-size: 1.6rem; color: var(--heading); }
+  .player-total span { font-size: .7rem; color: var(--muted); }
+  .lane-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 3.5rem), 1fr)); gap: 6px; }
+  .lane-tile { display: flex; flex-direction: column; justify-content: center; align-items: center; aspect-ratio: 1; min-width: 0; padding: .25rem; gap: .1rem; border-radius: 7px; line-height: 1.2; }
+  .lane-number { font-size: .7rem; }
+  .lane-tile strong { font-size: 1.25rem; }
+  .lane-points { font-size: .75rem; }
+  .lane-tile[data-points="1"], .lane-key[data-points="1"] { color: #17613d; background: #e8f5ed; }
+  .lane-tile[data-points="0.5"], .lane-key[data-points="0.5"] { color: #805000; background: #fff3d6; }
+  .lane-tile[data-points="0"], .lane-key[data-points="0"] { color: #a02d3b; background: #fcecef; }
+  .match-scorecard .player-set-points { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin: 12px 0 0; font-size: .85rem; color: var(--muted); }
+  .player-set-points strong { color: var(--heading); }
+  @media (max-width: 700px) {
+    .scorecard-summary { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 16px; text-align: center; }
+    .scorecard-summary > :last-child { text-align: center; }
+    .duel-players { grid-template-columns: minmax(0, 1fr); }
+    .scorecard-player { padding: 16px 12px; }
+    .scorecard-player + .scorecard-player { border-inline-start: 0; border-top: 1px solid var(--line); }
+    .duel-heading { padding-inline: 12px; }
+  }
   .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 25px; margin-block: 30px; }
   .gallery img { width: 100%; border-radius: var(--radius); }
   .edition h2 { font-size: 1.8rem; margin-block: 15px; }
