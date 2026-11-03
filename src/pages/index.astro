@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import clubPhoto from '../assets/club-team.webp';
 import Layout from '../layouts/Layout.astro';
 import FeaturedNews from '../components/FeaturedNews.astro';
 import MatchCard from '../components/MatchCard.astro';
@@ -25,7 +27,10 @@ const aTeamTables = standingsForTeam(sports, aTeamName);
 const positions = sports.competitions.flatMap(c => c.rows.filter(r => r.team.club.id === site.clubId).map(r => ({ ...r, competition: c.competition.name })));
 ---
 <Layout title="Kuželky v Táboře" description="Novinky KK Lokomotiva Tábor, zápasy, oficiální výsledky a tabulky. Turnaj dvojic Žižkova 200.">
-  <header class="home-masthead"><div><p class="eyebrow">KK Lokomotiva Tábor</p><h1>Kuželky v Táboře.</h1></div><p class="home-season">Sezóna <strong>{sports.season.name}</strong><span>{sports.teams.length} družstev · {sports.competitions.length} soutěží</span></p></header>
+  <header class="home-masthead">
+    <div class="home-introduction"><div><p class="eyebrow">KK Lokomotiva Tábor</p><h1>Kuželky v Táboře.</h1></div><p class="home-season">Sezóna <strong>{sports.season.name}</strong><span>{sports.teams.length} družstev · {sports.competitions.length} soutěží</span></p></div>
+    <Image src={clubPhoto} alt="Společná fotografie hráčů na kuželně v Táboře." width={224} height={168} widths={[128, 224, 256, 448]} sizes="(max-width: 760px) 128px, 224px" format="webp" quality={82} loading="eager" class="home-team-photo" />
+  </header>
   <section id="aktualne" class="home-news" aria-label="Aktuální články">
     <h2 class="sr-only">Zprávy z klubu</h2>
     <FeaturedNews news={news.slice(0, 4)} />

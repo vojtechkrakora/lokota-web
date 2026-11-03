@@ -34,6 +34,8 @@ The owner's later approval “udelej to tak” authorizes T-20's local homepage 
 
 The owner's detailed visual-modernization request on 2026-11-02 authorizes local T-19 implementation and supersedes earlier presentation instructions for repeated large news-logo tiles and next-match placement below the A-team standings. Follow the updated requirements/design: short navy/blue club introduction, next match before the feed, prominent first entry, compact typography for news without a photo, light overall surfaces and preserved A–E accents. All data processing, routes/anchors, content, results, metadata and no-JavaScript availability remain regression boundaries. A tiny progressive enhancement for actual table-overflow guidance is permitted. Record before/after screenshots and responsive, keyboard, contrast and same-input verification. This request does not authorize commit, push or production deployment.
 
+On 2026-11-03 the owner supplied a real 1024×768 photograph and permitted trying it despite quality concerns. T-21 is a local-only trial of the proposed jersey-red action accents and the full-frame photo in a modest homepage introduction. Keep the unchanged source at src/assets/club-team.webp, use local Astro image variants, preserve faces/framing, and do not attach invented player names, dates or match context. Navy artwork, light/neutral surfaces, the original logo, A–E team colors, outcome colors and all data/URL boundaries remain. The red screen shade is a UI choice, not a verified official color code. The owner subsequently requested “commit and push” for the current T-21 palette/photo and gallery changes, authorizing their Git publication. This supersedes the local-only Git restriction; CI/Pages success and live verification remain separate.
+
 - **Simplicity first:** choose the simplest solution satisfying approved requirements. Explain the concrete need for each new dependency, service, or abstraction.
 - **Static by default:** use Astro SSG and TypeScript. Keep browser JavaScript minimal and use reusable Astro components.
 - **Confirmed delivery platform:** use GitHub and Cloudflare Pages Free. Provider recommendations for other products do not override the approved platform.
@@ -41,6 +43,8 @@ The owner's detailed visual-modernization request on 2026-11-02 authorizes local
 - **Justified automation only:** scheduled GitHub Actions or a Cloudflare Worker may be proposed for a specific unmet requirement. Explain necessity, free-tier impact, failure handling, and maintenance before including it in the design. Do not introduce a Worker merely to serve static pages.
 - **Strong boundaries:** use TypeScript and validate manually maintained content and external API data. Keep ČKA fetching, validation, and transformations separate from page rendering without inventing generic repository layers or service hierarchies.
 - **Single-maintainer clarity:** prefer direct code, descriptive names, small cohesive modules, and short explanations of non-obvious decisions.
+
+The owner's subsequent “udelej to tak” on 2026-11-03 authorizes T-21's local warm-palette refinement: warm near-white page background, restrained red actions/separators and a softly red-tinted grouped homepage overview. This supersedes only the neutral-gray overview treatment; keep white content surfaces, navy artwork, team/outcome distinctions, photos and all functionality. Appearance acceptance and publication remain separate.
 
 ## Content and presentation rules
 
