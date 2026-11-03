@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { validateContent } from './check-content.ts';
+import { pragueClock } from '../src/lib/dates.ts';
 
 // Explicit synthetic editorial examples live only during this check (or --keep UI review).
 const news = resolve('src/content/news/sdd-test');
@@ -18,6 +19,16 @@ try {
   for (const path of [news, editions, downloads]) await mkdir(path, { recursive: true });
   await copyFile('tests/fixtures/test-cover.png', resolve(news, 'test-cover.png'));
   await copyFile('tests/fixtures/draft-only.png', resolve(news, 'draft-only.png'));
+  // Current-date entries sort first and exercise both homepage preview variants.
+  for (const [slug, cover] of [['000-sdd-home-cover', true], ['001-sdd-home-plain', false]] as const) await writeFile(resolve(news, `${slug}.md`), `---
+slug: ${slug}
+title: "TEST — náhled úvodní stránky"
+publicationDate: "${pragueClock(new Date()).date}"
+summary: "Pouze syntetický test náhledu článku."
+${cover ? 'cover:\n  src: ./test-cover.png\n  alt: "Testovací geometrická grafika, nejde o fotografii klubu"\n' : ''}---
+
+Pouze testovací obsah.
+`);
   for (let i = 1; i <= 12; i++) await writeFile(resolve(news, `${i}.md`), `---
 slug: sdd-test-${i}
 title: "TEST — článek ${i}"
@@ -70,7 +81,16 @@ ${year !== 2003 ? '\n## Výsledky\n\n| Dvojice | Kuželky |\n| --- | --- |\n| Te
   const noCover = await readFile(resolve(out, 'novinky/sdd-test-2/index.html'), 'utf8');
   assert.ok(!noCover.includes('class="article-cover"'), 'Optional cover must not produce a broken hero');
   const listing = await readFile(resolve(out, 'novinky/index.html'), 'utf8');
-  assert.match(listing, /class="news-default"/); assert.match(listing, /class="feed-photo"/);
+  const homepage = await readFile(resolve(out, 'index.html'), 'utf8');
+  const homeSlugs = [...homepage.matchAll(/data-news-slug="([^"]+)"/g)].map(match => match[1]);
+  assert.equal(homeSlugs.length, 4, 'Homepage curates four published manual articles');
+  assert.deepEqual(homeSlugs.slice(0, 2), ['000-sdd-home-cover', '001-sdd-home-plain'], 'Homepage keeps editorial date/slug ordering');
+  assert.match(homepage, /class="story-photo"/);
+  assert.match(homepage, /class="story-art-label"/);
+  const newsEntries = [...listing.matchAll(/<article\b[^>]*data-feed-kind="news"[^>]*>[\s\S]*?<\/article>/g)].map(match => match[0]);
+  assert.ok(newsEntries.some(entry => !entry.includes('class="feed-visual"')), 'News without a cover remains readable without an image tile');
+  assert.ok(!listing.includes('news-default'), 'Do not repeat large emblem placeholders');
+  assert.match(listing, /class="feed-photo"/);
   assert.match(listing, /class="score-preview-value"/);
   const files = await readdir(out, { recursive: true });
   assert.ok(!files.some(f => /sdd-private-draft|draft-only/.test(f)), 'Draft routes and original images must not be emitted');

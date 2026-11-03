@@ -1,0 +1,31 @@
+---
+interface Props { label: string; }
+const { label } = Astro.props;
+---
+<div class="table-region">
+  <p class="table-help small" hidden><span aria-hidden="true">↔</span> Posuňte tabulku do strany pro další sloupce.</p>
+  <div class="table-scroll" tabindex="0" role="region" aria-label={label}><slot /></div>
+</div>
+<script>
+  // The table remains ordinary HTML; only the overflow hint needs JavaScript.
+  document.querySelectorAll<HTMLElement>('.table-region').forEach(region => {
+    const scroll = region.querySelector<HTMLElement>('.table-scroll');
+    const table = scroll?.querySelector('table');
+    const hint = region.querySelector<HTMLElement>('.table-help');
+    if (!scroll || !table || !hint) return;
+    const update = () => {
+      const overflowing = scroll.scrollWidth > scroll.clientWidth + 1;
+      hint.hidden = !overflowing;
+      scroll.dataset.overflow = String(overflowing);
+    };
+    update();
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(update);
+      observer.observe(scroll);
+      observer.observe(table);
+    } else {
+      window.addEventListener('resize', update);
+    }
+    document.fonts.ready.then(update);
+  });
+</script>

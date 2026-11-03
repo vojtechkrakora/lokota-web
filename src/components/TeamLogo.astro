@@ -1,7 +1,8 @@
 ---
 import { Image } from 'astro:assets';
 import { clubEmblem } from '../lib/club-logos.ts';
-interface Props { clubId: number; }
-const emblem = clubEmblem(Astro.props.clubId);
+interface Props { clubId: number; size?: number; }
+const { clubId, size = 48 } = Astro.props;
+const emblem = clubEmblem(clubId);
 ---
-{emblem ? <Image src={emblem} alt="" width={48} height={48} widths={[48, 96]} sizes="48px" fit="contain" format="webp" loading="lazy" class="team-logo" /> : <span class="team-logo team-logo-placeholder" aria-hidden="true" title="Znak není k dispozici">—</span>}
+{emblem ? <Image src={emblem} alt="" width={size} height={size} widths={[size, size * 2]} sizes={`${size}px`} fit="contain" format="webp" loading="lazy" class="team-logo" /> : <span class="team-logo team-logo-placeholder" aria-hidden="true" title="Znak není k dispozici">—</span>}

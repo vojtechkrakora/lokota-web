@@ -1,0 +1,23 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import { formatDate } from '../lib/dates.ts';
+interface Props { news: CollectionEntry<'news'>[]; }
+const { news } = Astro.props;
+---
+<div class="home-news-grid">
+  {news.map((entry, index) => <article class:list={['home-story', { 'home-story-lead': index === 0, 'has-cover': !!entry.data.cover }]} data-news-slug={entry.data.slug}>
+    <a class="home-story-link" href={`/novinky/${entry.data.slug}/`}>
+      <div class="story-artwork" aria-hidden="true">
+        {entry.data.cover ? <Image src={entry.data.cover.src} alt="" width={Math.min(index === 0 ? 1000 : 400, entry.data.cover.src.width)} layout="constrained" loading={index === 0 ? 'eager' : 'lazy'} fetchpriority={index === 0 ? 'high' : undefined} class="story-photo" /> : <span class="story-art-label">{index === 0 ? 'KK Lokomotiva Tábor' : 'Z klubu'}</span>}
+      </div>
+      <div class="story-copy">
+        <p class="story-date"><span>Novinka</span><time datetime={entry.data.publicationDate}>{formatDate(entry.data.publicationDate)}</time></p>
+        <h3>{entry.data.title}</h3>
+        {index === 0 && <p class="story-summary">{entry.data.summary}</p>}
+        {index === 0 && <span class="story-read">Číst článek <span aria-hidden="true">↗</span></span>}
+      </div>
+    </a>
+  </article>)}
+  {!news.length && <div class="empty-state"><h3>Zprávy připravujeme</h3><p>Klubové články zde najdete, jakmile budou zveřejněné.</p></div>}
+</div>

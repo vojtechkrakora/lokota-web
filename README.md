@@ -2,7 +2,7 @@
 
 Czech static website for **KK Lokomotiva Tábor**. Astro, TypeScript, Git-managed Markdown and public ČKA data. No backend or browser framework.
 
-The owner approved the requirements, architecture and task plan. The implementation, supplied club logo, team accents and one labelled sample article are committed and pushed. Offline CI and a Pages deployment of commit 1b1c807 are verified. That deployment has an opponent-logo defect; its T-15 correction is locally verified and awaits commit/push and deployment verification. Final appearance review, real editorial/tournament/contact content, daily refresh and operational checks remain pending; the temporary deployment is not a completed final launch. The light design is labelled as a working version, and indexing is disabled.
+The owner approved the requirements, architecture and task plan. The implementation, supplied club logo, team accents and one labelled sample article are committed and pushed. Offline CI and a Pages deployment of commit 1b1c807 are verified. That deployment had an opponent-logo defect; its T-15 snapshot correction was subsequently committed and pushed, with separate deployed-feature verification still pending. Final appearance review, real editorial/tournament/contact content, daily refresh and operational checks remain pending; the temporary deployment is not a completed final launch. The design is labelled as a working version, and indexing is disabled. Reports through commit ea1167a are committed and pushed. The owner-requested T-19 visual modernization and T-20 four-story homepage refinement, compact match cards and grouped club overview are locally implemented and verified. On 2026-11-03 the owner explicitly authorized committing and pushing the current changes. Git publication, successful CI/Pages deployment, live verification and final appearance acceptance are separate milestones; see docs/tasks.md and Git history for the handoff.
 
 ## Develop and verify
 
@@ -15,7 +15,7 @@ npm ci
 npm run dev
 ```
 
-The development server prints its actual address (normally http://localhost:4321). It fetches sports data once at startup; restart it to refresh. Core visitor pages require no JavaScript.
+The development server prints its actual address (normally http://localhost:4321). It fetches sports data once at startup; restart it to refresh. Core visitor pages require no JavaScript. A small progressive enhancement shows table-scrolling guidance only when a table actually overflows; the semantic table and native horizontal scrolling remain usable without it.
 
 ```sh
 npm run verify          # Astro/TypeScript, all content/references, offline behavior tests
@@ -32,7 +32,7 @@ Astro preview runs in the background in this version. Stop with `npx astro previ
 
 ## Author content
 
-The owner-supplied club emblem is maintained at src/assets/club-logo.jpg, relocated from the initial downloads area without changing its bytes. Replace this source to update the shared-header logo and default news thumbnail; Astro generates the small responsive WebP variants during builds. Keep the supplied artwork and proportions intact. The downloads directory is for tournament attachments.
+The owner-supplied club emblem is maintained at src/assets/club-logo.jpg, relocated from the initial downloads area without changing its bytes. Replace this source to update the shared-header logo and browser favicon; Astro generates the small responsive WebP variants during builds. Keep the supplied artwork and proportions intact. The downloads directory is for tournament attachments.
 
 News lives under src/content/news, tournament editions under src/content/tournaments, and the four club pages under src/content/club. Use ordinary Markdown. Put local photographs beside their entries; about 20 photographs/year is expected. Crop/resize excessive source images before committing. Astro generates responsive web images; gallery links open larger optimized files without a lightbox.
 
@@ -56,9 +56,9 @@ draft: true
 ---
 ```
 
-Add the Markdown body after frontmatter. Dates must be quoted real YYYY-MM-DD calendar dates; a published article cannot be future-dated. Optional author/gallery may be omitted. Cover is optional: omit the whole cover block to use the supplied club emblem in feed thumbnails. If supplied, cover requires a local image and meaningful alt; a missing referenced file remains an error. The article detail omits a large cover when absent. Slugs stay stable and unique; archiv/strana are reserved. Published is the default (`draft: false`). Drafts are validated but excluded from routes, feeds, sitemap and Astro's public image store. Git itself and public PR previews are not private editorial storage. Files in public are public even when attached to a draft.
+Add the Markdown body after frontmatter. Dates must be quoted real YYYY-MM-DD calendar dates; a published article cannot be future-dated. Optional author/gallery may be omitted. Cover is optional: omit the whole cover block for a typographic entry in the full news listing; the homepage uses a navy lane-motif preview instead. Neither view repeats a large emblem placeholder. If supplied, cover requires a local image and meaningful alt; a missing referenced file remains an error. The article detail omits a large cover when absent. Slugs stay stable and unique; archiv/strana are reserved. Published is the default (`draft: false`). Drafts are validated but excluded from routes, feeds, sitemap and Astro's public image store. Git itself and public PR previews are not private editorial storage. Files in public are public even when attached to a draft.
 
-The homepage and /novinky/ combine published articles and dated FINISHED/FORFEIT matches with official scores, newest first. Manual articles come first on same-day ties. Match corrections keep the same ID and anchor; reopened matches leave the news feed. Manual yearly archives survive sports season changes.
+The homepage curates the four latest published articles, then three upcoming matches and three recent results across all club teams, followed by the A-team table. Upcoming cards reuse the existing next-match policy; recent cards follow the existing generated-feed eligibility/order. The complete /novinky/ listing combines published articles and dated FINISHED/FORFEIT matches with official scores, newest first. Manual articles come first on same-day ties. Match corrections keep the same ID and anchor; reopened matches leave the news feed. Manual yearly archives survive sports season changes.
 
 Example tournament frontmatter (illustrative year only; do not publish it as a real edition):
 
