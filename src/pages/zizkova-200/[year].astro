@@ -4,5 +4,13 @@ import Edition from '../../components/Edition.astro';
 import { publicContent } from '../../lib/content.ts';
 export async function getStaticPaths() { return (await publicContent()).tournaments.map(entry => ({ params: { year: String(entry.data.year) }, props: { entry } })); }
 const { entry } = Astro.props;
+const { tournaments } = await publicContent();
 ---
-<Layout title={`${entry.data.name} ${entry.data.year}`} description={entry.data.description}><header class="page-heading"><a href="/zizkova-200/" class="text-link">← Žižkova 200</a><h1>Ročník {entry.data.year}</h1></header><div class="reading-wide"><Edition entry={entry} /><a href="/zizkova-200/archiv/" class="text-link">Archiv všech ročníků ↗</a></div></Layout>
+<Layout title={`${entry.data.name} ${entry.data.year}`} description={entry.data.description}><header class="page-heading"><a href="/zizkova-200/" class="text-link">← Žižkova 200</a><h1>Ročník {entry.data.year}</h1></header><div class="reading-wide">
+  <nav class="edition-years" aria-label="Ročníky Žižkovy 200">{tournaments.map(e => <a href={`/zizkova-200/${e.data.year}/`} aria-current={e.data.year === entry.data.year ? 'page' : undefined}>{e.data.year}</a>)}</nav>
+  <Edition entry={entry} /><a href="/zizkova-200/archiv/" class="text-link">Archiv všech ročníků ↗</a></div></Layout>
+<style>
+  .edition-years { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s8); }
+  .edition-years a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: var(--s2) var(--s4); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--white); font-weight: 700; text-decoration: none; }
+  .edition-years a[aria-current] { border-color: var(--accent); color: var(--white); background: var(--accent); text-decoration: underline; }
+</style>

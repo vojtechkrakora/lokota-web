@@ -1,0 +1,125 @@
+---
+import type { TournamentResults } from '../lib/tournament-results.ts';
+interface Props { year: number; groups: TournamentResults; }
+const { year, groups } = Astro.props;
+const total = groups.reduce((sum, group) => sum + group.pairs.length, 0);
+const prefix = `vysledky-${year}`;
+---
+<section class="tournament-results" data-tournament-results aria-labelledby={`${prefix}-heading`}>
+  <header class="tournament-results-heading">
+    <div><p class="eyebrow">Výsledkový archiv · {year}</p><h3 id={`${prefix}-heading`}>Výsledky dvojic</h3></div>
+    <p class="small">{total} dvojic · {total * 2} hráčských startů</p>
+  </header>
+  <div class="tournament-search" data-search-controls hidden>
+    <label for={`${prefix}-search`}>Najít hráče nebo oddíl</label>
+    <div class="tournament-search-fields">
+      <input id={`${prefix}-search`} type="search" autocomplete="off" spellcheck="false" placeholder="Např. Hažva nebo Chýnov" aria-describedby={`${prefix}-help ${prefix}-count`} />
+      <button type="button" data-search-clear>Zobrazit vše</button>
+    </div>
+    <p id={`${prefix}-help`} class="small">Stačí část jména, i bez diakritiky. Zobrazí se celá dvojice včetně spoluhráče.</p>
+    <p id={`${prefix}-count`} class="tournament-search-count" role="status" aria-live="polite" aria-atomic="true" data-search-count>Zobrazeno {total} z {total} dvojic.</p>
+  </div>
+  <noscript><p class="notice">Všechny výsledky jsou níže. Jméno můžete najít pomocí hledání v prohlížeči; vyhledávací pole na stránce vyžaduje JavaScript.</p></noscript>
+  <p class="small tournament-results-key">Plné + dorážka = celkem shozených kuželek. Chyby jsou uvedeny zvlášť. Opakované starty téhož hráče zůstávají zachovány.</p>
+  <p class="empty-state" data-search-empty hidden>Tomuto hledání neodpovídá žádná dvojice. Zkuste kratší jméno nebo zvolte „Zobrazit vše“.</p>
+  {groups.map(group => <section class="tournament-result-group" data-result-group aria-labelledby={`${prefix}-${group.id}`}>
+    <h4 id={`${prefix}-${group.id}`}>{group.label} <span class="small">Dvojic: {group.pairs.length}</span></h4>
+    <ol class="tournament-pairs" role="list">
+      {group.pairs.map(pair => <li class="tournament-pair" data-result-pair data-player-search={JSON.stringify(pair.players.map(p => `${p.name} ${p.club}`))}>
+        <header class="tournament-pair-heading">
+          <p class="tournament-position"><strong>{pair.position}.</strong> místo{pair.category && <span>{pair.category.label} · {pair.category.position}. v kategorii</span>}</p>
+          <p class="tournament-pair-total"><span>Dvojice celkem</span><strong>{pair.total}</strong></p>
+        </header>
+        <div class="tournament-players">
+          {pair.players.map(player => <div class="tournament-player">
+            <p class="tournament-player-name">{player.name}</p><p class="tournament-player-club">{player.club}</p>
+            <dl class="tournament-player-figures">
+              <div><dt>Plné</dt><dd>{player.full}</dd></div><div><dt>Dorážka</dt><dd>{player.spares}</dd></div><div><dt>Chyby</dt><dd>{player.errors}</dd></div><div class="tournament-player-total"><dt>Celkem</dt><dd>{player.total}</dd></div>
+            </dl>
+          </div>)}
+        </div>
+        <dl class="tournament-pair-figures"><div><dt>Plné dvojice</dt><dd>{pair.full}</dd></div><div><dt>Dorážka dvojice</dt><dd>{pair.spares}</dd></div><div><dt>Chyby dvojice</dt><dd>{pair.errors}</dd></div></dl>
+        {pair.note && <p class="tournament-result-note">Poznámka ke zdroji: {pair.note}</p>}
+      </li>)}
+    </ol>
+  </section>)}
+</section>
+<script>
+  import { matchesTournamentPlayers } from '../lib/tournament-search.ts';
+  document.querySelectorAll<HTMLElement>('[data-tournament-results]').forEach(root => {
+    const controls = root.querySelector<HTMLElement>('[data-search-controls]');
+    const input = root.querySelector<HTMLInputElement>('input[type="search"]');
+    const clear = root.querySelector<HTMLButtonElement>('[data-search-clear]');
+    const status = root.querySelector<HTMLElement>('[data-search-count]');
+    const empty = root.querySelector<HTMLElement>('[data-search-empty]');
+    if (!controls || !input || !clear || !status || !empty) return;
+    const groups = [...root.querySelectorAll<HTMLElement>('[data-result-group]')].map(group => ({
+      group, pairs: [...group.querySelectorAll<HTMLElement>('[data-result-pair]')].map(element => ({
+        element, players: JSON.parse(element.dataset.playerSearch!) as string[],
+      })),
+    }));
+    const total = groups.reduce((sum, group) => sum + group.pairs.length, 0);
+    const update = () => {
+      let visible = 0;
+      groups.forEach(({ group, pairs }) => {
+        let matches = 0;
+        pairs.forEach(({ element, players }) => {
+          element.hidden = !matchesTournamentPlayers(players, input.value);
+          if (!element.hidden) matches++;
+        });
+        group.hidden = matches === 0;
+        visible += matches;
+      });
+      status.textContent = `Zobrazeno ${visible} z ${total} dvojic.`;
+      empty.hidden = visible !== 0;
+    };
+    input.addEventListener('input', update);
+    clear.addEventListener('click', () => { input.value = ''; update(); input.focus(); });
+    controls.hidden = false;
+    update();
+  });
+</script>
+<style>
+  .tournament-results { margin-block: var(--s12); font-variant-numeric: tabular-nums; }
+  .tournament-results-heading { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--s3); margin-bottom: var(--s6); }
+  .tournament-results-heading h3 { margin-top: var(--s2); font-size: 1.8rem; }
+  .tournament-results-heading > p, .tournament-results-key { color: var(--muted); }
+  .tournament-search { padding: var(--s6); margin-bottom: var(--s4); border: 1px solid var(--accent-line); border-radius: var(--radius); background: var(--accent-soft); }
+  .tournament-search label { display: block; margin-bottom: var(--s2); font-weight: 750; color: var(--navy); }
+  .tournament-search-fields { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s3); }
+  .tournament-search input { flex: 1 1 16rem; min-width: 0; width: 100%; min-height: 48px; padding: var(--s3); border: 1px solid var(--muted); border-radius: var(--radius-small); background: var(--white); color: var(--ink); font: inherit; }
+  .tournament-search input::placeholder { color: var(--muted); opacity: 1; }
+  .tournament-search button { min-height: 48px; padding: var(--s2) var(--s4); border: 1px solid var(--accent); border-radius: var(--radius-small); background: var(--white); color: var(--accent); font: inherit; font-weight: 650; cursor: pointer; }
+  .tournament-search button:hover { background: var(--accent); color: var(--white); }
+  .tournament-search-count { font-size: .9375rem; font-weight: 650; }
+  .tournament-result-group { margin-top: var(--s8); }
+  .tournament-result-group > h4 { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--s2); padding-bottom: var(--s3); border-bottom: 2px solid var(--navy); font-size: 1.3rem; }
+  .tournament-result-group > h4 span { font-weight: 500; letter-spacing: 0; color: var(--muted); }
+  .tournament-pairs { padding: 0; margin: 0; list-style: none; }
+  .tournament-pair { margin-top: var(--s4); border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); overflow-wrap: anywhere; }
+  .tournament-pair-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); background: var(--panel); border-radius: var(--radius) var(--radius) 0 0; }
+  .tournament-position { color: var(--navy); font-size: .875rem; }
+  .tournament-position > strong { font-size: 1.5rem; }
+  .tournament-position > span { display: block; color: var(--muted); }
+  .tournament-pair-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s3); margin: 0; }
+  .tournament-pair-total > span { font-size: .8125rem; color: var(--muted); }
+  .tournament-pair-total > strong { font-size: 1.75rem; line-height: 1.2; color: var(--accent); }
+  .tournament-players { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tournament-player { min-width: 0; padding: var(--s4); }
+  .tournament-player + .tournament-player { border-left: 1px solid var(--line); }
+  .tournament-player-name { font-weight: 750; font-size: 1.125rem; color: var(--navy); }
+  .tournament-player-club { margin-top: var(--s1); color: var(--muted); font-size: .875rem; }
+  .tournament-player-figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 3.5rem), 1fr)); gap: var(--s2); margin: var(--s4) 0 0; }
+  .tournament-player-figures dt { font-size: .8125rem; color: var(--muted); }
+  .tournament-player-figures dd { margin: var(--s1) 0 0; font-size: 1.125rem; font-weight: 700; color: var(--navy); }
+  .tournament-player-total dd { color: var(--accent); }
+  .tournament-pair-figures { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s6); padding: var(--s3) var(--s4); margin: 0; border-top: 1px solid var(--line); font-size: .8125rem; color: var(--muted); }
+  .tournament-pair-figures > div { display: flex; flex-wrap: wrap; gap: var(--s2); }
+  .tournament-pair-figures dd { margin: 0; font-weight: 700; color: var(--ink); }
+  .tournament-result-note { padding: var(--s4); margin: 0; border-top: 1px solid var(--line); font-size: .875rem; }
+  @media (max-width: 40rem) {
+    .tournament-search { padding: var(--s4); }
+    .tournament-players { grid-template-columns: minmax(0, 1fr); }
+    .tournament-player + .tournament-player { border-left: 0; border-top: 1px solid var(--line); }
+  }
+</style>

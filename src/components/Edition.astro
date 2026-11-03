@@ -1,14 +1,28 @@
 ---
 import { render, type CollectionEntry } from 'astro:content';
 import Gallery from './Gallery.astro';
+import TournamentResults from './TournamentResults.astro';
 import { formatDate } from '../lib/dates.ts';
 interface Props { entry: CollectionEntry<'tournaments'>; }
 const { entry } = Astro.props;
 const { Content } = await render(entry);
-const hasResults = /^#{1,6}\s+Výsledky\s*$/im.test(entry.body ?? '');
+const hasResults = entry.data.results.length > 0 || /^#{1,6}\s+Výsledky\s*$/im.test(entry.body ?? '');
 const hasTable = /^\s*\|.+\|/m.test(entry.body ?? '');
+const structured = entry.data.results.length > 0;
 ---
-<article class="edition"><p class="eyebrow">Ročník {entry.data.year}</p><h2>{entry.data.name} {entry.data.year}</h2><p class="lead">{entry.data.description}</p><p class="edition-date">{entry.data.startDate ? `${formatDate(entry.data.startDate)}${entry.data.endDate && entry.data.endDate !== entry.data.startDate ? ` — ${formatDate(entry.data.endDate)}` : ''}` : 'Termín bude oznámen.'}</p>
+<article class="edition"><p class="eyebrow">{entry.data.archived ? 'Archivní ročník' : 'Ročník'} {entry.data.year}</p><h2>{entry.data.name} {entry.data.year}</h2><p class="lead">{entry.data.description}</p>{(entry.data.startDate || !entry.data.archived) && <p class="edition-date">{entry.data.startDate ? `${formatDate(entry.data.startDate)}${entry.data.endDate && entry.data.endDate !== entry.data.startDate ? ` — ${formatDate(entry.data.endDate)}` : ''}` : 'Termín bude oznámen.'}</p>}
 {entry.data.qualifiesForMcr === true && <p class="notice">Tento ročník je kvalifikační na MČR.</p>}{entry.data.qualifiesForMcr === false && <p class="small">Tento ročník není kvalifikační na MČR.</p>}
-<div class="prose" tabindex={hasTable ? 0 : undefined} role={hasTable ? 'region' : undefined} aria-label={hasTable ? 'Propozice a výsledky — tabulku lze posunout do strany' : undefined}><Content /></div>{!hasResults && <section class="empty-state"><h3>Výsledky</h3><p>Výsledky tohoto ročníku zatím nebyly zveřejněny.</p></section>}
-{entry.data.downloads.length > 0 && <section class="downloads"><h3>Ke stažení</h3><ul>{entry.data.downloads.map(file => <li><a href={file.path} download>{file.label} ↓</a></li>)}</ul></section>}<Gallery pictures={entry.data.gallery} /></article>
+{structured ? <>
+  {entry.data.downloads.length > 0 && <div class="edition-source-links">{entry.data.downloads.map(file => <a href={file.path} download>{file.label} ↓</a>)}</div>}
+  <details class="edition-provenance"><summary>O výsledcích, zdroje a poznámky</summary><div class="prose" tabindex={hasTable ? 0 : undefined} role={hasTable ? 'region' : undefined} aria-label={hasTable ? 'Propozice a výsledky — tabulku lze posunout do strany' : undefined}><Content /></div></details>
+  <TournamentResults year={entry.data.year} groups={entry.data.results} />
+</> : <div class="prose" tabindex={hasTable ? 0 : undefined} role={hasTable ? 'region' : undefined} aria-label={hasTable ? 'Propozice a výsledky — tabulku lze posunout do strany' : undefined}><Content /></div>}
+{!hasResults && <section class="empty-state"><h3>Výsledky</h3><p>Výsledky tohoto ročníku zatím nebyly zveřejněny.</p></section>}
+{!structured && entry.data.downloads.length > 0 && <section class="downloads"><h3>Ke stažení</h3><ul>{entry.data.downloads.map(file => <li><a href={file.path} download>{file.label} ↓</a></li>)}</ul></section>}<Gallery pictures={entry.data.gallery} /></article>
+<style>
+  .edition-source-links { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s6); margin-top: var(--s3); }
+  .edition-source-links a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 650; }
+  .edition-provenance { margin-top: var(--s3); border-block: 1px solid var(--line); }
+  .edition-provenance summary { min-height: 44px; padding-block: var(--s3); font-weight: 650; cursor: pointer; color: var(--navy); }
+  .edition-provenance .prose { padding-block: var(--s3) var(--s6); }
+</style>

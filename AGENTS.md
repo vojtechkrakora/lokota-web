@@ -80,3 +80,10 @@ The owner's subsequent “udelej to tak” on 2026-11-03 authorizes T-21's local
 - Cover API outages and malformed/partial data in relevant tests. Do not write tests merely reproducing static markup or impose a large test stack without need.
 - Application checks now exist: npm run verify (offline type/content/tests), npm run build (fresh live preparation and checked static output), and npm run test:editorial (temporary synthetic editorial smoke check). Use the pinned Node version. Do not invent passing checks; record material verification evidence in docs/tasks.md.
 - Explain what changed, how it was verified, and unresolved risks. Do not commit, push, deploy, or change production infrastructure unless authorized.
+
+## Historical tournament archive refinement
+
+The owner's 2026-11-03 request and supplied PDF/web sources authorize local T-22 (FR-07; D-03): checked historical 2021/2023/2025 results and per-year player/club search. Use validated structured edition content, preserve source order/ranks/spelling/repeated starts, retain PDFs/source explanations, and keep all results readable without JavaScript. Historical archived=true entries do not become current. The PDF filename “2022” disagrees with its 2021 headings/dates; preserve an explicit note, including the repeated printed rank 40. This authorizes a one-time checked editorial conversion, not an importer, player-profile system, external search service or new dependencies. No commit/push/deployment authorization follows from this request.
+
+
+Publication authorization, 2026-11-03: the owner's subsequent “commit and push” explicitly authorizes Git publication of the verified T-22 historical archive/search and T-23 current 2026 edition, including their documentation, PDFs and fixture correction. This supersedes the local-only Git restrictions above for this work. Preserve the existing GitHub/Pages delivery workflow; CI/Pages completion and deployed-feature verification remain separate milestones.

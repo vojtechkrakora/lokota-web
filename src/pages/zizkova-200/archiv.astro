@@ -3,4 +3,25 @@ import Layout from '../../layouts/Layout.astro';
 import { publicContent } from '../../lib/content.ts';
 const { tournaments } = await publicContent();
 ---
-<Layout title="Archiv Žižkovy 200" description="Minulé ročníky klubového turnaje dvojic Žižkova 200."><header class="page-heading"><a href="/zizkova-200/" class="text-link">← Žižkova 200</a><h1>Archiv turnaje</h1><p>Ročníky, výsledky a vzpomínky z drah.</p></header><div class="reading-wide">{tournaments.length ? <ul class="edition-list">{tournaments.map(e => <li><a href={`/zizkova-200/${e.data.year}/`}><strong>{e.data.year}</strong><span>{e.data.name}</span><span aria-hidden="true">↗</span></a></li>)}</ul> : <div class="empty-state"><h2>Archiv zatím čeká na podklady</h2><p>Starší ročníky zde mohou být postupně doplněny.</p></div>}</div></Layout>
+<Layout title="Archiv Žižkovy 200" description="Minulé ročníky klubového turnaje dvojic Žižkova 200. Výsledky dvojic a hledání hráčů v jednotlivých letech.">
+  <header class="page-heading"><a href="/zizkova-200/" class="text-link">← Žižkova 200</a><h1>Archiv turnaje</h1><p>Žižkova 200 · turnaj dvojic na 200 hodů sdružených.</p></header>
+  <div class="reading-wide">
+    {tournaments.length ? <>
+      <p class="lead">Vyberte ročník a najděte svůj výsledek. V každém přehledu můžete hledat hráče i oddíl a prohlédnout si výkony celé dvojice.</p>
+      <ul class="edition-list">{tournaments.map(e => {
+        const pairs = e.data.results.reduce((sum, group) => sum + group.pairs.length, 0);
+        return <li><a href={`/zizkova-200/${e.data.year}/`}><strong>{e.data.year}</strong><span><b>{e.data.name}</b>{pairs > 0 && <small>{pairs} dvojic · {pairs * 2} hráčských startů<span>Výsledky a hledání hráčů</span></small>}</span><span aria-hidden="true">↗</span></a></li>;
+      })}</ul>
+    </> : <div class="empty-state"><h2>Archiv zatím čeká na podklady</h2><p>Starší ročníky zde mohou být postupně doplněny.</p></div>}
+  </div>
+</Layout>
+<style>
+  .edition-list { margin-top: var(--s6); }
+  .edition-list a { color: var(--navy); }
+  .edition-list a:hover { color: var(--accent); }
+  .edition-list strong { font-size: clamp(2rem, 6vw, 3rem); font-variant-numeric: tabular-nums; }
+  .edition-list a > span { min-width: 0; }
+  .edition-list b { font-weight: 700; }
+  .edition-list small { display: block; color: var(--muted); font-size: .875rem; margin-top: var(--s1); }
+  .edition-list small span { display: block; color: var(--accent); }
+</style>
