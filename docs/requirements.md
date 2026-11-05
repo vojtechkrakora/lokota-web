@@ -142,6 +142,8 @@ Branding clarification, 2026-11-02: the owner supplied the club logo as kkLokomo
 
 Acceptance: the maintainer can add an article or tournament edition using content/assets alone. Invalid required fields and broken local image/file references are reported before publishing. Informative images have meaningful alternative text. Cover images and galleries work at mobile and desktop widths without external image hosting or processing services. Keep future AI/MCP publishing possible through clear content conventions, without implementing integration now.
 
+Owner-requested presentation cleanup, 2026-11-05 (FR-09; T-25): remove the general “Pracovní verze webu” banner from every page. Keep the explicit test-sports-data warning in offline fixture previews and retain sports provenance, update/source notices and the existing noindex policy. This is not final-domain launch or search-indexing approval. The owner explicitly authorized commit and push of this change and the prepared T-24 article.
+
 ### FR-10 — Automatic refresh and graceful degradation
 
 Keep sports data current without routine manual intervention, preferably through static builds, with a target of **one automatic refresh per day**. This is a daily scheduling target, not guaranteed real-time or exactly-24-hour delivery. Evaluate a scheduled GitHub Actions/deployment approach within free-tier limits. Handle unavailable, incomplete, or invalid API data gracefully; prefer retaining the last successfully published data to breaking the public site. Do not expose internal errors to visitors.

@@ -33,7 +33,7 @@ const favicon = await getImage({ src: clubLogo, width: 32, height: 32, format: '
   </head>
   <body data-sports-provenance={sports.provenance}>
     <a href="#obsah" class="skip-link">Přejít na obsah</a>
-    <div class="development"><div class="container">Pracovní verze webu{sports.provenance === 'fixture' && ' · TESTOVACÍ SPORTOVNÍ DATA'}</div></div>
+    {sports.provenance === 'fixture' && <div class="development"><div class="container">TESTOVACÍ SPORTOVNÍ DATA</div></div>}
     <header class="site-header">
       <div class="container header-inner">
         <a href="/" class="brand" aria-label={`${site.clubName} — úvodní stránka`}><Image src={clubLogo} alt="Logo KK Lokomotiva Tábor" class="brand-logo" width={56} height={56} widths={[44, 56, 88, 112]} sizes="(max-width: 760px) 44px, 56px" format="webp" quality={90} loading="eager" /><span class="brand-name"><strong>{site.name}</strong><small>Kuželkářský klub</small></span></a>
