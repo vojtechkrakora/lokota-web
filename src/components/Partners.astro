@@ -1,0 +1,25 @@
+---
+import { Image } from 'astro:assets';
+import cusLogo from '../assets/partners/cus.png';
+import ckaLogo from '../assets/partners/cka.png';
+
+const partners = [
+  { name: 'Město Tábor', href: 'https://www.taborcz.eu/', src: '/images/mesto-tabor-logo.svg', width: 212, height: 50 },
+  { name: 'Česká unie sportu', href: 'https://www.cuscz.cz/', src: cusLogo, width: 136, height: 84 },
+  { name: 'Česká kuželkářská asociace', href: 'https://kuzelky.cz/', src: ckaLogo, width: 76, height: 83 },
+];
+---
+<section class="partners" aria-labelledby="partners-heading">
+  <div class="container partners-inner">
+    <h2 id="partners-heading">Partneři klubu</h2>
+    <ul class="partner-list">
+      {partners.map(partner => <li>
+        <a href={partner.href}>
+          {typeof partner.src === 'string'
+            ? <img src={partner.src} alt={partner.name} width={partner.width} height={partner.height} loading="lazy" decoding="async" />
+            : <Image src={partner.src} alt={partner.name} width={partner.width} height={partner.height} widths={[partner.width, partner.width * 2]} sizes={`${partner.width}px`} format="webp" quality={90} loading="lazy" />}
+        </a>
+      </li>)}
+    </ul>
+  </div>
+</section>
