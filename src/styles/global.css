@@ -76,7 +76,7 @@
   .story-artwork { position: relative; isolation: isolate; overflow: hidden; border-radius: var(--radius-small); background: var(--navy); }
   .story-artwork::after { content: ''; position: absolute; z-index: -1; width: 36px; height: 150%; right: 12px; top: -25%; transform: rotate(22deg); border-inline: 1px solid #40536b; box-shadow: 18px 0 0 0 var(--navy), 19px 0 0 0 #40536b, -18px 0 0 0 var(--navy), -19px 0 0 0 #40536b; }
   .story-art-label { position: relative; display: block; padding: var(--s4); color: #d8e2f1; font-size: .75rem; font-weight: 650; letter-spacing: .04em; }
-  .story-photo { position: absolute; width: 100%; height: 100%; object-fit: cover; }
+  .story-photo { position: absolute; width: 100%; height: 100%; object-fit: contain; }
   .story-copy { min-width: 0; padding-block: var(--s3); }
   .story-date { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); color: var(--muted); font-size: .75rem; }
   .story-date > span { color: var(--accent); font-weight: 700; }
@@ -86,7 +86,10 @@
   .home-story-lead .story-artwork { position: absolute; inset: 0; z-index: -1; }
   .home-story-lead .story-art-label { padding: var(--s6) var(--s8); font-size: .8125rem; text-transform: uppercase; }
   .home-story-lead .story-copy { margin-top: var(--s16); padding: var(--s8); }
-  .home-story-lead.has-cover .story-copy { margin-top: 220px; background: var(--navy); }
+  .home-story-lead.has-cover .home-story-link { justify-content: start; }
+  .home-story-lead.has-cover .story-artwork { position: relative; inset: auto; z-index: auto; flex: none; border-radius: 0; }
+  .home-story-lead.has-cover .story-photo { position: static; height: auto; }
+  .home-story-lead.has-cover .story-copy { flex: 1; margin-top: 0; background: var(--navy); }
   .home-story-lead .story-date, .home-story-lead .story-date > span { color: #c8d8ee; }
   .home-story-lead h3 { margin-top: var(--s4); font-size: clamp(1.6rem, 2.6vw, 2.25rem); font-weight: 800; line-height: 1.15; color: var(--white); }
   .story-summary { margin-top: var(--s4); color: #d8e2f1; font-size: 1rem; line-height: 1.6; }
@@ -129,7 +132,7 @@
   .feed-card h3 a:hover { color: var(--accent); text-decoration: underline; }
   .feed-card p { margin-bottom: var(--s2); font-size: 1rem; color: var(--muted); }
   .feed-visual { align-self: start; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-small); overflow: hidden; background: var(--white); text-decoration: none; container-type: inline-size; }
-  .feed-photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .feed-photo { width: 100%; aspect-ratio: 4 / 3; object-fit: contain; }
   .score-preview { display: grid; gap: var(--s3); padding: var(--s4) var(--s2); text-align: center; color: var(--navy); }
   .score-preview-label { font-size: .75rem; font-weight: 650; color: var(--muted); }
   .score-preview-value { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 3px; color: var(--navy); font-size: clamp(1.5rem, 25cqi, 2.4rem); font-weight: 800; line-height: 1.1; letter-spacing: -.05em; }
@@ -231,7 +234,7 @@
   .article .page-heading { max-width: 880px; }
   .article .page-heading h1 { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.08; }
   .article .page-heading > p:not(.eyebrow) { padding-left: var(--s4); border-left: 3px solid var(--accent); }
-  .article-cover { margin-bottom: var(--s8); }
+  .article-cover { max-width: var(--reading); margin-bottom: var(--s8); font-size: 1.0625rem; }
   .article-cover img { width: 100%; border-radius: var(--radius); }
   figcaption { margin-top: var(--s2); color: var(--muted); font-size: .875rem; }
   .prose { max-width: var(--reading); font-size: 1.0625rem; line-height: 1.8; overflow-wrap: anywhere; overflow-x: auto; }
@@ -352,7 +355,6 @@
     .home-story-lead .story-art-label { padding: var(--s4) var(--s6); }
     .story-copy h3 { font-size: 1.125rem; }
     .home-story-lead .story-copy h3 { font-size: 1.625rem; }
-    .home-story-lead.has-cover .story-copy { margin-top: 180px; }
     .home-match-list { grid-template-columns: minmax(0, 1fr); gap: var(--s6); }
     .home-match-entry .match-meta > span:first-child { flex: 1 1 11rem; }
     .home-match-entry .match-meta .tag { flex: none; white-space: nowrap; }
