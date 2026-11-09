@@ -1,26 +1,10 @@
 ---
 import type { Match } from '../lib/sports.ts';
-import { score, statusLabels } from '../lib/sports.ts';
-import { formatDate } from '../lib/dates.ts';
-import { site } from '../site.ts';
-import { teamAccent, matchAppearance } from '../lib/team-colors.ts';
-import TeamLogo from './TeamLogo.astro';
+import { readSports } from '../lib/sports-data.ts';
+import { sportsAssets } from '../lib/sports-assets.ts';
+import { renderMatch } from '../lib/sports-html.ts';
 interface Props { match: Match; anchor?: boolean; logos?: boolean; compact?: boolean; }
 const { match, anchor = true, logos = false, compact = false } = Astro.props;
-const completed = ['FINISHED', 'FORFEIT', 'IN_PROGRESS'].includes(match.status);
-const appearance = matchAppearance([match.homeTeam, match.awayTeam]);
+const assets = await sportsAssets(readSports());
 ---
-<article class:list={['match-card', { 'match-card-compact': compact }]} data-team-color={appearance.accent} style={appearance.style} id={anchor ? `zapas-${match.id}` : undefined}>
-  <div class="match-meta"><span>{match.date ? <time datetime={match.date}>{formatDate(match.date)}</time> : 'Termín bude upřesněn'}{match.time ? ` · ${match.time}` : ' · Čas bude upřesněn'}</span><span class="tag">{statusLabels[match.status]}</span></div>
-  <div class:list={['match-teams', { 'with-logos': logos }]}>
-    <span class:list={{ 'club-team': match.homeTeam.club.id === site.clubId }} data-team-color={teamAccent(match.homeTeam)}>
-      {logos && <TeamLogo clubId={match.homeTeam.club.id} size={compact ? 56 : 48} />}<span>{match.homeTeam.name}<small class={compact ? 'sr-only' : undefined}>Domácí</small></span>
-    </span>
-    <strong class="score" aria-label="Body domácí : hosté">{completed ? score(match) : 'vs'}</strong>
-    <span class:list={{ 'club-team': match.awayTeam.club.id === site.clubId }} data-team-color={teamAccent(match.awayTeam)}>
-      {logos && <TeamLogo clubId={match.awayTeam.club.id} size={compact ? 56 : 48} />}<span>{match.awayTeam.name}<small class={compact ? 'sr-only' : undefined}>Hosté</small></span>
-    </span>
-  </div>
-  {completed && <p class="score-detail">Body · Kuželky {score(match, 'totalPerformance')} · Sety {score(match, 'totalSetPoints')}</p>}
-  {!compact && <p class="match-venue">{match.venue ? [match.venue.name, match.venue.street, match.venue.city].filter(Boolean).join(', ') : 'Místo bude upřesněno'}{match.round && ` · ${match.round}. kolo`}</p>}
-</article>
+<Fragment set:html={renderMatch(match, assets, { anchor, logos, compact })} />

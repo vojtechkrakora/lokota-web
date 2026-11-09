@@ -1,12 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import MatchCard from '../components/MatchCard.astro';
 import { readSports } from '../lib/sports-data.ts';
+import { sportsAssets } from '../lib/sports-assets.ts';
+import { renderMatches } from '../lib/sports-html.ts';
 const sports = readSports();
-const groups = sports.competitions.map(c => ({ ...c, matches: sports.matches.filter(m => m.competition.id === c.competition.id).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '') || a.id - b.id) }));
+const assets = await sportsAssets(sports);
 ---
-<Layout title="Zápasy a výsledky" description="Rozpis a oficiální výsledky zápasů všech družstev KK Lokomotiva Tábor."><header class="page-heading"><p class="eyebrow">Sezóna {sports.season.name}</p><h1>Zápasy a výsledky</h1><p>Všechna naše družstva. Termíny, místa a výsledky podle ČKA.</p></header>
-{groups.length > 0 && <nav class="section-nav" aria-label="Soutěže">{groups.map(g => <a href={`#soutez-${g.competition.id}`}>{g.competition.name}</a>)}</nav>}
-{groups.map(group => <section class="competition-section" id={`soutez-${group.competition.id}`}><div class="section-heading"><h2>{group.competition.name}</h2><a class="text-link" href={`/tabulky/#soutez-${group.competition.id}`}>Tabulka ↗</a></div><div class="matches-grid">{group.matches.map(match => <MatchCard match={match} logos />)}</div></section>)}
-{!groups.length && <div class="empty-state"><h2>Sezóna se připravuje</h2><p>Pro nejnovější sezónu zatím nejsou zveřejněné klubové zápasy.</p></div>}
+<Layout title="Zápasy a výsledky" description="Rozpis a oficiální výsledky zápasů všech družstev KK Lokomotiva Tábor."><header class="page-heading"><p class="eyebrow">Sezóna <span data-sports-season>{sports.season.name}</span></p><h1>Zápasy a výsledky</h1><p>Všechna naše družstva. Termíny, místa a výsledky podle ČKA.</p></header>
+<div data-sports-slot="matches" set:html={renderMatches(sports, assets)} />
 <p class="small page-note">Pořadí skóre: domácí : hosté. Pomlčka znamená, že údaj nebyl zveřejněn. Časy zobrazujeme jako místní český čas; nejde o živé výsledky.</p></Layout>

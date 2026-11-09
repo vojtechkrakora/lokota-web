@@ -5,10 +5,14 @@ import clubLogo from '../assets/club-logo.jpg';
 import Partners from '../components/Partners.astro';
 import { navigation, site, publishingContext } from '../site.ts';
 import { readSports } from '../lib/sports-data.ts';
-import { formatUpdated } from '../lib/dates.ts';
+import SportsRefresh from '../components/SportsRefresh.astro';
+import { sportsManifest } from '../lib/sports-manifest.ts';
+import { renderDataNote } from '../lib/sports-html.ts';
 interface Props { title: string; description: string; image?: string; noCanonical?: boolean; }
 const { title, description, image } = Astro.props;
 const sports = readSports();
+const refreshSports = ['/', '/zapasy/', '/tabulky/', '/novinky/'].includes(Astro.url.pathname) || /^\/novinky\/strana\/\d+\/$/.test(Astro.url.pathname);
+const sportsVersion = refreshSports ? (await sportsManifest()).version : undefined;
 const context = publishingContext(process.env);
 const canonical = context.origin && !Astro.props.noCanonical ? new URL(Astro.url.pathname, context.origin).href : undefined;
 const active = (path: string) => Astro.url.pathname.startsWith(path);
@@ -32,7 +36,7 @@ const favicon = await getImage({ src: clubLogo, width: 32, height: 32, format: '
     {canonical && <meta property="og:url" content={canonical} />}
     {image && context.origin && <meta property="og:image" content={new URL(image, context.origin).href} />}
   </head>
-  <body data-sports-provenance={sports.provenance}>
+  <body data-sports-provenance={sports.provenance} data-sports-version={sportsVersion} data-sports-built-at={sports.fetchedAt}>
     <a href="#obsah" class="skip-link">Přejít na obsah</a>
     {sports.provenance === 'fixture' && <div class="development"><div class="container">TESTOVACÍ SPORTOVNÍ DATA</div></div>}
     <header class="site-header">
@@ -46,7 +50,7 @@ const favicon = await getImage({ src: clubLogo, width: 32, height: 32, format: '
     <footer class="site-footer">
       <div class="container footer-grid"><div><a href="/" class="footer-brand">{site.name}</a><p class="small">{site.clubName}</p></div>
         <nav aria-label="Informace o klubu"><a href="/klub/">O klubu</a><a href="/historie/">Historie</a><a href="/kontakt/">Kontakt</a><a href="/herna/">Kuželna</a></nav>
-        <div class="data-note"><p>Sportovní data aktualizována <time datetime={sports.fetchedAt}>{formatUpdated(sports.fetchedAt)}</time> (Praha).</p><p class="small">Zdroj: <a href="https://kuzelky.cz/">Česká kuželkářská asociace</a> · sezóna {sports.season.name}. Data se obnovují při sestavení webu. Nejde o živé výsledky.</p></div>
+        <div class="data-note"><div data-sports-slot={refreshSports ? 'data-note' : undefined} set:html={renderDataNote(sports)} />{refreshSports && <SportsRefresh />}</div>
       </div>
     </footer>
   </body>

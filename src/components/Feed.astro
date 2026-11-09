@@ -1,28 +1,11 @@
 ---
-import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 import type { FeedItem } from '../lib/feed.ts';
-import { formatDate, number } from '../lib/dates.ts';
-import { matchAppearance, teamAccent } from '../lib/team-colors.ts';
-import { site } from '../site.ts';
+import { readSports } from '../lib/sports-data.ts';
+import { sportsAssets } from '../lib/sports-assets.ts';
+import { renderFeed } from '../lib/sports-html.ts';
 interface Props { items: FeedItem[]; news: CollectionEntry<'news'>[]; featured?: boolean; }
 const { items, news, featured = false } = Astro.props;
+const assets = await sportsAssets(readSports(), news);
 ---
-<div class="feed-list">
-  {items.map((item, index) => {
-    const article = item.kind === 'news' ? news.find(n => `news-${n.data.slug}` === item.key) : undefined;
-    const appearance = matchAppearance(item.kind === 'match' ? item.teams ?? [] : []);
-    return <article class:list={['feed-card', { 'feed-featured': featured && index === 0, 'feed-has-visual': item.kind === 'match' || !!article?.data.cover }]} data-feed-key={item.key} data-feed-kind={item.kind} data-team-color={appearance.accent} style={appearance.style}>
-      {(item.kind === 'match' || article?.data.cover) && <a href={item.href} class="feed-visual" tabindex="-1" aria-hidden="true">
-        {item.kind === 'match' ? <div class="score-preview">
-          <span class="score-preview-label">Výsledek na body</span>
-          {item.result ? <div class="score-preview-value"><span data-team-color={item.teams?.[0] && teamAccent(item.teams[0])}><small>Domácí</small>{number(item.result.home)}</span><span class="score-preview-separator">:</span><span data-team-color={item.teams?.[1] && teamAccent(item.teams[1])}><small>Hosté</small>{number(item.result.away)}</span></div> : <span>Výsledek bude doplněn</span>}
-          <div class="score-preview-teams">{item.teams?.filter(team => team.club.id === site.clubId).map(team => <span class="team-chip" data-team-color={teamAccent(team)}>{team.name.replace(site.clubName, 'Tábor')}</span>)}</div>
-        </div> : article?.data.cover ? <Image src={article.data.cover.src} alt="" width={Math.min(600, article.data.cover.src.width)} layout="constrained" loading="lazy" class="feed-photo" /> : null}
-      </a>}
-      <div class="feed-card-body"><div class="eyebrow"><span class:list={['tag', { 'tag-result': item.kind === 'match' }]}>{item.kind === 'news' ? 'Z klubu' : 'Výsledek zápasu'}</span><time datetime={item.date}>{formatDate(item.date)}</time></div>
-      <h3><a href={item.href}>{item.title}</a></h3><p>{item.summary}</p><a class="text-link" href={item.href}>{item.kind === 'news' ? 'Číst novinku' : 'Detail výsledku'} <span aria-hidden="true">↗</span></a></div>
-    </article>;
-  })}
-  {items.length === 0 && <div class="empty-state"><h3>Zatím bez novinek</h3><p>Klubové zprávy a oficiální výsledky zde najdete, jakmile budou k dispozici.</p></div>}
-</div>
+<Fragment set:html={renderFeed(items, assets, featured)} />

@@ -3,6 +3,7 @@ import { resolve, relative, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { publishingContext } from '../src/site.ts';
 import { validateContent } from './check-content.ts';
+import { manifestSchema } from '../src/lib/sports-refresh.ts';
 
 export async function checkOutput(directory: string, provenance: 'live' | 'fixture') {
   const root = resolve(directory);
@@ -44,6 +45,16 @@ export async function checkOutput(directory: string, provenance: 'live' | 'fixtu
     for (const m of body.matchAll(/\bsrcset="([^"]+)"/g)) for (const part of m[1]!.split(',')) assertLink(file, part.trim().split(/\s+/)[0]!);
   }
   const content = validateContent();
+  const manifestPath = resolve(root, 'sports-manifest.json');
+  const manifestInput = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  if (manifestInput.provenance !== provenance) throw new Error('Runtime manifest provenance mismatch');
+  // Explicit offline output is never served by the production runtime endpoint.
+  const manifest = manifestSchema.parse({ ...manifestInput, provenance: 'live' });
+  const newsKeys = content.news.filter(e => !e.data.draft).map(e => `news-${e.data.slug}`).sort();
+  if (JSON.stringify(manifest.news.map(e => e.key).sort()) !== JSON.stringify(newsKeys)) throw new Error('Runtime manifest must contain exactly published news');
+  for (const asset of [...Object.values(manifest.logos), ...Object.values(manifest.covers).map(c => c.src)]) assertLink(manifestPath, asset);
+  const routes = JSON.parse(readFileSync(resolve(root, '_routes.json'), 'utf8'));
+  if (JSON.stringify(routes) !== JSON.stringify({ version: 1, include: ['/api/sports'], exclude: [] })) throw new Error('Functions must run only on the sports endpoint');
   for (const entry of content.news.filter(e => e.data.draft)) if (existsSync(routeFile(`/novinky/${entry.data.slug}/`))) throw new Error(`Draft article published: ${entry.data.slug}`);
   for (const entry of content.tournaments.filter(e => e.data.draft)) if (existsSync(routeFile(`/zizkova-200/${entry.data.year}/`))) throw new Error(`Draft edition published: ${entry.data.year}`);
   const sitemap = readFileSync(resolve(root, 'sitemap.xml'), 'utf8');

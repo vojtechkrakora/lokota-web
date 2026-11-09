@@ -3,32 +3,16 @@ import { Image } from 'astro:assets';
 import clubPhoto from '../assets/club-team.webp';
 import Layout from '../layouts/Layout.astro';
 import FeaturedNews from '../components/FeaturedNews.astro';
-import MatchCard from '../components/MatchCard.astro';
 import TableScroll from '../components/TableScroll.astro';
 import { feedContent } from '../lib/content.ts';
-import { nextMatch, standingsForTeam, type Match } from '../lib/sports.ts';
-import { number } from '../lib/dates.ts';
-import { teamAccent } from '../lib/team-colors.ts';
-import { site } from '../site.ts';
-const { sports, feed, news, current } = await feedContent();
-const upcoming: Match[] = [];
-for (let i = 0; i < 3; i++) {
-  const match = nextMatch(sports.matches.filter(m => !upcoming.some(selected => selected.id === m.id)), sports.fetchedAt);
-  if (!match) break;
-  upcoming.push(match);
-}
-const matchesByKey = new Map(sports.matches.map(match => [`match-${match.id}`, match]));
-const recent = feed.filter(item => item.kind === 'match').slice(0, 3).flatMap(item => {
-  const match = matchesByKey.get(item.key);
-  return match ? [match] : [];
-});
-const aTeamName = `${site.clubName} A`;
-const aTeamTables = standingsForTeam(sports, aTeamName);
-const positions = sports.competitions.flatMap(c => c.rows.filter(r => r.team.club.id === site.clubId).map(r => ({ ...r, competition: c.competition.name })));
+import { sportsAssets } from '../lib/sports-assets.ts';
+import { renderHomeMatches, renderTables, renderTeamOverview } from '../lib/sports-html.ts';
+const { sports, news, current } = await feedContent();
+const assets = await sportsAssets(sports);
 ---
 <Layout title="Kuželky v Táboře" description="Novinky KK Lokomotiva Tábor, zápasy, oficiální výsledky a tabulky. Turnaj dvojic Žižkova 200.">
   <header class="home-masthead">
-    <div class="home-introduction"><div><p class="eyebrow">KK Lokomotiva Tábor</p><h1>Kuželky v Táboře.</h1></div><p class="home-season">Sezóna <strong>{sports.season.name}</strong><span>{sports.teams.length} družstev · {sports.competitions.length} soutěží</span></p></div>
+    <div class="home-introduction"><div><p class="eyebrow">KK Lokomotiva Tábor</p><h1>Kuželky v Táboře.</h1></div><p class="home-season">Sezóna <strong data-sports-season>{sports.season.name}</strong><span data-sports-slot="home-counts">{sports.teams.length} družstev · {sports.competitions.length} soutěží</span></p></div>
     <Image src={clubPhoto} alt="Společná fotografie hráčů na kuželně v Táboře." width={224} height={168} widths={[128, 224, 256, 448]} sizes="(max-width: 760px) 128px, 224px" format="webp" quality={82} loading="eager" class="home-team-photo" />
   </header>
   <section id="aktualne" class="home-news" aria-label="Aktuální články">
@@ -36,34 +20,15 @@ const positions = sports.competitions.flatMap(c => c.rows.filter(r => r.team.clu
     <FeaturedNews news={news.slice(0, 4)} />
     <div class="home-news-more"><a class="text-link" href="/novinky/">Všechny články <span aria-hidden="true">→</span></a></div>
   </section>
-  <section class="home-sports" aria-labelledby="home-matches-heading">
-    <div class="section-heading"><div><p class="eyebrow">Sezóna {sports.season.name}</p><h2 id="home-matches-heading">Na drahách</h2></div><a href="/zapasy/" class="text-link">Všechny zápasy <span aria-hidden="true">→</span></a></div>
-    <section class="home-match-group" aria-labelledby="next-match-heading"><h3 id="next-match-heading">Nejbližší zápasy</h3>
-      {upcoming.length ? <div class="home-match-list">{upcoming.map((match, index) => <div class:list={['home-match-entry', { 'home-next-match': index === 0 }]} data-match-id={match.id}><p class="match-competition">{match.competition.name}{match.round && ` · ${match.round}. kolo`}</p><MatchCard match={match} anchor={false} logos compact /><a href={`/zapasy/#zapas-${match.id}`} class="text-link">Vše o zápasu <span aria-hidden="true">→</span></a></div>)}</div> : <div class="empty-state"><p>Další zápas zatím není naplánován.</p></div>}
-    </section>
-    <section class="home-match-group" aria-labelledby="recent-matches-heading"><h3 id="recent-matches-heading">Poslední výsledky</h3>
-      {recent.length ? <div class="home-match-list">{recent.map(match => <div class="home-match-entry" data-match-id={match.id}><p class="match-competition">{match.competition.name}{match.round && ` · ${match.round}. kolo`}</p><MatchCard match={match} anchor={false} logos compact /><a href={`/zapasy/#zapas-${match.id}`} class="text-link">Detail výsledku <span aria-hidden="true">→</span></a></div>)}</div> : <div class="empty-state"><p>Výsledky se zobrazí po dohrání zápasů.</p></div>}
-    </section>
-  </section>
+  <section class="home-sports" aria-labelledby="home-matches-heading" data-sports-slot="home-matches" set:html={renderHomeMatches(sports, assets)} />
   <div class="home-club-overview">
       <section class="home-standings" data-team-color="red" aria-labelledby="a-team-heading">
-        <div class="section-heading"><div><p class="eyebrow">Sezóna {sports.season.name}</p><h2 id="a-team-heading">Tabulka A-týmu</h2></div><a class="text-link" href="/tabulky/">Všechny tabulky <span aria-hidden="true">→</span></a></div>
-        {aTeamTables.length ? aTeamTables.map(({ competition, rows }) => <div class="home-league">
-          <h3>{competition.name}</h3>
-          {rows.length ? <TableScroll label={`Tabulka A-týmu · ${competition.name}`}><table>
-            <caption class="sr-only">{competition.name} · oficiální tabulka · {sports.season.name}. A-tým našeho klubu je zvýrazněný.</caption>
-            <thead><tr><th scope="col"><abbr title="Pořadí">Poř.</abbr></th><th scope="col">Družstvo</th><th scope="col"><abbr title="Odehrané zápasy">Z</abbr></th><th scope="col">Body</th></tr></thead>
-            <tbody>{rows.map(row => {
-              const selected = row.team.club.id === site.clubId && row.team.name === aTeamName;
-              return <tr class:list={{ 'selected-team': selected }} data-team-color={teamAccent(row.team)}><td>{row.position}.</td><th scope="row">{row.team.name}{selected && <span class="team-selection">Náš A-tým</span>}</th><td>{row.matches}</td><td><strong>{number(row.tablePoints)}</strong></td></tr>;
-            })}</tbody>
-          </table></TableScroll> : <p class="small">Oficiální tabulka A-týmu zatím není k dispozici.</p>}
-          <a href={`/tabulky/#soutez-${competition.id}`} class="text-link">Podrobná tabulka →</a>
-        </div>) : <p>Tabulka A-týmu pro tuto sezónu zatím není k dispozici.</p>}
+        <div class="section-heading"><div><p class="eyebrow">Sezóna <span data-sports-season>{sports.season.name}</span></p><h2 id="a-team-heading">Tabulka A-týmu</h2></div><a class="text-link" href="/tabulky/">Všechny tabulky <span aria-hidden="true">→</span></a></div>
+        <div data-sports-slot="home-table" set:html={renderTables(sports, true)} />
       </section>
   <div class="home-club-links">
-      <section class="standing-summary"><div class="section-heading"><h2>Naše družstva</h2></div>{positions.length ? <ul>{positions.map(row => <li data-team-color={teamAccent(row.team)}><span><strong>{row.team.name.replace('KK Lokomotiva ', '')}</strong><small>{row.competition}</small></span><span class="position">{row.position}.<small>místo</small></span></li>)}</ul> : <p>Oficiální tabulky zatím nejsou k dispozici.</p>}<a href="/tabulky/" class="text-link">Kompletní tabulky ↗</a></section>
+      <section class="standing-summary" data-sports-slot="home-teams" set:html={renderTeamOverview(sports)} />
       <section class="tournament-promo"><p class="eyebrow">Turnaj dvojic</p><h2>Žižkova 200</h2><p>200 hodů sdružených.</p><p class="small">{current ? `${current.data.year} · ${current.data.description}` : 'Informace o dalším ročníku připravujeme.'}</p><a href="/zizkova-200/" class="text-link">Informace a výsledky →</a></section>
   </div>
   </div>
-</Layout>
+<TableScroll label="" scriptOnly /></Layout>

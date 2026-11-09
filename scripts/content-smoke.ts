@@ -91,10 +91,12 @@ ${year !== 2003 ? '\n## Výsledky\n\n| Dvojice | Kuželky |\n| --- | --- |\n| Te
   assert.ok(newsEntries.some(entry => !entry.includes('class="feed-visual"')), 'News without a cover remains readable without an image tile');
   assert.ok(!listing.includes('news-default'), 'Do not repeat large emblem placeholders');
   assert.match(listing, /class="feed-photo"/);
-  assert.match(listing, /class="score-preview-value"/);
   const files = await readdir(out, { recursive: true });
+  // The growing real article collection can move the synthetic result off page 1.
+  const feedPages = files.filter(f => f === 'novinky/index.html' || /^novinky\/strana\/\d+\/index\.html$/.test(f));
+  assert.ok((await Promise.all(feedPages.map(f => readFile(resolve(out, f), 'utf8')))).some(html => html.includes('class="score-preview-value"')), 'Paginated mixed news retains the official result tile');
   assert.ok(!files.some(f => /sdd-private-draft|draft-only/.test(f)), 'Draft routes and original images must not be emitted');
-  for (const file of files.filter(f => f.endsWith('.html') || f.endsWith('.xml'))) assert.ok(!(await readFile(resolve(out, file), 'utf8')).includes('PRIVATE_DRAFT_TEST_MARKER'), 'Draft text must not be emitted');
+  for (const file of files.filter(f => /\.(html|xml|json)$/.test(f))) assert.ok(!(await readFile(resolve(out, file), 'utf8')).includes('PRIVATE_DRAFT_TEST_MARKER'), 'Draft text must not be emitted, including in the runtime manifest');
   for (const file of files.filter(f => f.endsWith('.html'))) assert.ok(!/lokot[\p{L}]*/iu.test(await readFile(resolve(out, file), 'utf8')), 'Unused nickname must not be emitted');
   const current = await readFile(resolve(out, 'zizkova-200/index.html'), 'utf8');
   assert.match(current, /Ročník 2002/); assert.match(current, /kvalifikační na MČR/);

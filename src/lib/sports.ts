@@ -50,20 +50,23 @@ export function standingsForTeam(sports: Sports, teamName: string) {
 
 export class ApiError extends Error {}
 export class PaginationError extends ApiError {}
-type Options = { fetch?: typeof fetch; sleep?: (ms: number) => Promise<void>; signal?: AbortSignal; timeoutMs?: number };
+type Options = { fetch?: typeof fetch; sleep?: (ms: number) => Promise<void>; signal?: AbortSignal; timeoutMs?: number; maxRequests?: number };
 
 export function createApi(options: Options = {}) {
   const request = options.fetch ?? fetch;
   const sleep = options.sleep ?? (ms => new Promise(resolve => setTimeout(resolve, ms)));
+  let requests = 0;
   async function get<T>(path: string, schema: z.ZodType<T>): Promise<T> {
     const url = `${site.apiBase}${path}`;
     for (let attempt = 0; attempt < 3; attempt++) {
       options.signal?.throwIfAborted();
+      if (++requests > (options.maxRequests ?? Infinity)) throw new ApiError('ČKA request budget exceeded');
       let response: Response;
       const timeout = AbortSignal.timeout(options.timeoutMs ?? 10_000);
       const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout;
       try {
-        response = await request(url, { signal, headers: { Accept: 'application/json', 'User-Agent': 'LokotaWeb/0.1' }, redirect: 'error' });
+        // Workers supports manual/follow only. Reject returned 3xx below on both runtimes.
+        response = await request(url, { signal, headers: { Accept: 'application/json', 'User-Agent': 'LokotaWeb/0.1' }, redirect: 'manual' });
       } catch {
         if (options.signal?.aborted || attempt === 2) throw new ApiError(`ČKA request failed: ${path.split('?')[0]} (network/timeout)`);
         await sleep(250 * 2 ** attempt); continue;

@@ -1,6 +1,6 @@
 # Lokota Web
 
-Czech static website for **KK Lokomotiva Tábor**. Astro, TypeScript, Git-managed Markdown and public ČKA data. No backend or browser framework.
+Czech static website for **KK Lokomotiva Tábor**. Astro, TypeScript, Git-managed Markdown and public ČKA data. Static HTML with an optional narrowly scoped Pages Function for sports refresh; no browser framework.
 
 The owner approved the requirements, architecture and task plan. The implementation, supplied club logo, team accents and one labelled sample article are committed and pushed. Offline CI and a Pages deployment of commit 1b1c807 are verified. That deployment had an opponent-logo defect; its T-15 snapshot correction was subsequently committed and pushed, with separate deployed-feature verification still pending. Final appearance review, real editorial/tournament/contact content, daily refresh and operational checks remain pending; the temporary deployment is not a completed final launch. The owner-requested general working-version banner is removed; offline fixture previews retain their explicit test-data warning, and indexing remains disabled. Reports through commit ea1167a are committed and pushed. The owner-requested T-19 visual modernization and T-20 four-story homepage refinement, compact match cards and grouped club overview are locally implemented and verified. On 2026-11-03 the owner explicitly authorized their commit/push, completed as beae943 on origin/main. T-21 adds the locally verified warm near-white/red palette, supplied homepage photograph and club gallery. The owner explicitly authorized committing and pushing these changes with “commit and push”; Git history records publication, while CI/Pages results and live verification remain separate. Successful CI/Pages deployment, live verification and final appearance acceptance are separate milestones; see docs/tasks.md and Git history for the handoff.
 
@@ -15,12 +15,13 @@ npm ci
 npm run dev
 ```
 
-The development server prints its actual address (normally http://localhost:4321). It fetches sports data once at startup; restart it to refresh. Core visitor pages require no JavaScript. A small progressive enhancement shows table-scrolling guidance only when a table actually overflows; the semantic table and native horizontal scrolling remain usable without it.
+The development server prints its actual address (normally http://localhost:4321). It prepares the static fallback once at startup. Astro dev/preview does not execute Pages Functions; use the runtime preview below to exercise request-time refresh. Core visitor pages remain readable without JavaScript. A small progressive enhancement shows table-scrolling guidance only when a table actually overflows; the semantic table and native horizontal scrolling remain usable without it.
 
 ```sh
 npm run verify          # Astro/TypeScript, all content/references, offline behavior tests
 npm run build           # verify, fresh live ČKA dataset, static build, output checks
-npm run preview         # serve the successful dist build
+npm run preview         # serve static dist only (no Pages Function)
+npm run preview:runtime # serve dist + real local Pages/workerd runtime on port 4321
 npm run dev:offline     # explicit synthetic sports data; large TEST warning
 npm run build:offline   # synthetic output only in .cache/offline-dist, never dist
 npm run test:editorial  # temporary synthetic articles/editions/images/download, build assertions, cleanup
@@ -29,6 +30,16 @@ npm run test:editorial  # temporary synthetic articles/editions/images/download,
 Only `npm run build` is the release path. Calling Astro directly bypasses preparation/output checks. Tests and `verify` do not contact ČKA. Editorial smoke examples use isolated sdd-test directories and refuse to overwrite an existing test area. `node scripts/content-smoke.ts --keep` retains them for deliberate local review; `node scripts/content-smoke.ts --clean` removes that test area afterward. Do not commit these generated examples. Two small PNG graphics under tests are synthetic image-processing fixtures, not club photographs.
 
 Astro preview runs in the background in this version. Stop with `npx astro preview stop`; inspect it with `npx astro preview status`. A preview serves build output, so later source edits need another build or the development server.
+
+## Sports refresh (T-37)
+
+After a successful npm run build, stop any Astro server on port 4321 and run npm run preview:runtime. This uses pinned development-only Wrangler and the actual local workerd runtime, without login, remote deployment or storage setup. npm run verify also bundles the Pages Function offline. wrangler.jsonc pins the compatibility date; public/_routes.json invokes Functions only for /api/sports. The owner authorized Git publication on 2026-11-09. A Git-integrated Pages deployment includes the Function; verify actual Cloudflare-to-ČKA access and Workers Free CPU/request usage there before declaring operational completion.
+
+Homepage sports, matches, tables and paginated mixed news request /api/sports once per page load. It fetches/validates complete latest-season club data and caches rendered fragments for five minutes per origin/deployment/data center. Browser responses use no-store; refreshing does not reset the saved data timestamp. Related sections switch together; no background polling, credentials or runtime image downloads. Published article metadata/local optimized covers and emblems come from sports-manifest.json. Manual article text and tournament archives stay unchanged. Existing pagination routes remain; newly needed pages beyond static output use /novinky/?strana=N. Without JavaScript that query displays the static first-page fallback.
+
+On endpoint/upstream/schema failure the existing HTML remains with its original timestamp and a short Czech notice. Without JavaScript or on non-sports pages, the footer identifies build-time data. Cache is disposable and is not durable last-good storage; repeated failures/no-JavaScript data can remain as old as the deployment. The existing build still requires fresh upstream data. Daily refresh activation/verification is a separate T-13 task. Do not call this live scoring or guaranteed real-time updates.
+
+Inspect local logs or, after deployment approval, Pages/Workers logs. Only controlled integration diagnostics are emitted; raw upstream payloads and secrets are not logged. GET /api/sports returns X-Sports-Cache: MISS/HIT and X-Sports-Fetched-At for diagnostics, with a generic non-cacheable 503 on failure. Upstream retrieval has a 12-second deadline, four-second request timeouts and at most 40 attempts; there is no user-selectable upstream URL or club filter. Cache issues do not prevent returning an otherwise valid fresh result. No KV, account credentials, scheduled job or daily repository writes are added.
 
 ## Author content
 

@@ -1,13 +1,20 @@
 ---
-interface Props { label: string; }
-const { label } = Astro.props;
+interface Props { label: string; scriptOnly?: boolean; }
+const { label, scriptOnly = false } = Astro.props;
 ---
-<div class="table-region">
+{!scriptOnly && <div class="table-region">
   <p class="table-help small" hidden><span aria-hidden="true">↔</span> Posuňte tabulku do strany pro další sloupce.</p>
   <div class="table-scroll" tabindex="0" role="region" aria-label={label}><slot /></div>
-</div>
+</div>}
 <script>
   // The table remains ordinary HTML; only the overflow hint needs JavaScript.
+  let observers: ResizeObserver[] = [];
+  let stop = new AbortController();
+  function initializeTables() {
+  observers.forEach(observer => observer.disconnect());
+  observers = [];
+  stop.abort();
+  stop = new AbortController();
   document.querySelectorAll<HTMLElement>('.table-region').forEach(region => {
     const scroll = region.querySelector<HTMLElement>('.table-scroll');
     const table = scroll?.querySelector('table');
@@ -23,9 +30,13 @@ const { label } = Astro.props;
       const observer = new ResizeObserver(update);
       observer.observe(scroll);
       observer.observe(table);
+      observers.push(observer);
     } else {
-      window.addEventListener('resize', update);
+      window.addEventListener('resize', update, { signal: stop.signal });
     }
     document.fonts.ready.then(update);
   });
+  }
+  initializeTables();
+  document.addEventListener('sports:updated', initializeTables);
 </script>
