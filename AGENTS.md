@@ -59,6 +59,10 @@ The owner's subsequent “udelej to tak” on 2026-11-03 authorizes T-21's local
 - The annual doubles tournament is Žižkova 200, played as 200 hodů sdružených (200 hs). Qualification for MČR varies by edition. Show results on the website and support optional downloadable files maintained through Git; do not build a browser upload interface.
 - No historical-content migration is required initially. Keep future addition of old articles, tournament editions, and assets possible through ordinary content authoring.
 
+### Recurring editorial assignment: Týden na drahách
+
+When the owner asks to create, prepare or write “Týden na drahách” (including an unaccented Czech spelling), read and follow [the weekly editorial guide](docs/tyden-na-drahach.md). It records the reusable authoring procedure requested on 2026-11-08, based on T-32 and the owner's explicit positive Tábor-fan voice. Resolve the reporting period using its defaults, research every club match and player start, separate actual disciplines, verify substitutions with the full official lineup, and prepare an ordinary Markdown article without requiring the owner to repeat these instructions. Record each issue's sources, coverage and checks in docs/tasks.md. A request to create the article prepares a draft; use any explicit publication authorization in the current conversation without asking again. This guidance creates no scheduled generator, new player feature or standing authorization to publish future issues.
+
 ## ČKA data rules
 
 - Inspect the official documentation and current public OpenAPI schema before relying on endpoints, query parameters, fields, enumerations, or relation expansion.
