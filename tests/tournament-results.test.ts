@@ -5,6 +5,7 @@ import { tournamentResults } from '../src/lib/tournament-results.ts';
 import { matchesTournamentPlayers, normalizeTournamentSearch } from '../src/lib/tournament-search.ts';
 import { contentSchemas, currentEdition } from '../src/lib/content-rules.ts';
 import { validateContent } from '../scripts/check-content.ts';
+import { hasTournamentResults, latestResultsEdition, tournamentWinners } from '../src/lib/tournament-overview.ts';
 
 const pair = {
   position: 1,
@@ -46,6 +47,37 @@ test('historical-only editions remain in the archive without becoming the curren
   assert.equal(currentEdition([{ data: archived }, { data: announced }])?.data.year, 2024);
   assert.equal(schema.safeParse({ ...archived, isCurrent: true }).success, false);
   assert.equal(currentEdition([{ data: { ...announced, draft: true } }, { data: archived }]), undefined);
+});
+
+test('latest results remain available before the current tournament and support authored Markdown', () => {
+  const editions = validateContent().tournaments;
+  const order = editions.map(entry => entry.data.year);
+  assert.equal(currentEdition(editions)?.data.year, 2026);
+  assert.equal(latestResultsEdition(editions)?.data.year, 2025);
+  assert.deepEqual(editions.map(entry => entry.data.year), order);
+  assert.equal(latestResultsEdition([]), undefined);
+  const announced = editions.find(entry => entry.data.year === 2026)!;
+  assert.equal(hasTournamentResults(announced), false);
+  assert.equal(hasTournamentResults({ ...announced, body: '## Výsledky\n\n## Propozice\nInformace.' }), false);
+  const markdown = { ...announced, body: '## Výsledky\n\n| Dvojice | Celkem |\n| --- | --- |\n| Test | 1800 |\n' };
+  assert.equal(latestResultsEdition([...editions, markdown])?.data.year, 2026);
+  assert.equal(latestResultsEdition([...editions, { ...markdown, data: { ...markdown.data, draft: true } }])?.data.year, 2025);
+  assert.equal(hasTournamentResults({ ...announced, body: '## Výsledky\n\n' }), false);
+  assert.equal(hasTournamentResults({ ...announced, body: '## Výsledky\n\n### Muži\n\n| Dvojice | Celkem |\n| --- | --- |\n| Test | 1800 |\n' }), true);
+});
+
+test('winner panels use official category or group first places and preserve ties without reranking', () => {
+  const editions = validateContent().tournaments;
+  const results = (year: number) => editions.find(entry => entry.data.year === year)!.data.results;
+  assert.deepEqual(tournamentWinners(results(2025)).map(({ label, pair }) => [label, pair.total]), [['Muži', 2095], ['Smíšené', 2031], ['Ženy', 1845]]);
+  assert.deepEqual(tournamentWinners(results(2023)).map(winner => winner.label), ['Muži', 'Ženy', 'Smíšené']);
+  assert.equal(tournamentWinners(results(2021))[0]!.pair.total, 2023);
+  const valid = tournamentResults.parse([group])[0]!;
+  const first = valid.pairs[0]!;
+  const tied = { ...first, note: 'Shared first place in source.' };
+  assert.deepEqual(tournamentWinners([{ ...valid, pairs: [first, tied, { ...first, position: 2 }] }]).map(winner => winner.pair), [first, tied]);
+  assert.equal(tournamentWinners([...results(2025), valid]).length, 4);
+  assert.deepEqual(tournamentWinners([]), []);
 });
 
 test('supplied archive retains every start, category and documented source discrepancy', () => {

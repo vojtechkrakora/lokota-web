@@ -1,0 +1,30 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { tournamentWinners } from '../lib/tournament-overview.ts';
+interface Props { entry: CollectionEntry<'tournaments'>; }
+const { entry } = Astro.props;
+const winners = tournamentWinners(entry.data.results);
+---
+{winners.length > 0 && <section class="tournament-honours" aria-labelledby={`vitezove-${entry.data.year}`}>
+  <header><p class="eyebrow">Vítězné dvojice · {entry.data.year}</p><h2 id={`vitezove-${entry.data.year}`}>Patří jim potlesk.</h2></header>
+  <ul role="list">{winners.map(({ label, pair, groupId }) => <li>
+    <p class="winner-category"><span aria-hidden="true">✦</span> {label}</p>
+    {pair.players.map(player => <p class="winner-player"><strong>{player.name}</strong><span>{player.club}</span></p>)}
+    <a class="winner-score" href={`/zizkova-200/${entry.data.year}/#vysledky-${entry.data.year}-${groupId}`} aria-label={`${label} ${entry.data.year}: ${pair.players.map(player => player.name).join(' a ')}, ${pair.total} kuželek, výsledky`}><strong>{pair.total}</strong><span>kuželek za dvojici <span aria-hidden="true">↗</span></span></a>
+  </li>)}</ul>
+</section>}
+<style>
+  .tournament-honours { padding: var(--s6); border: 1px solid #ded4bf; border-top: 3px solid #a58440; border-radius: var(--radius); background: #f7f3ea; }
+  .tournament-honours .eyebrow { color: #725523; font-size: .6875rem; }
+  .tournament-honours h2 { margin-top: var(--s2); font-size: 1.5rem; }
+  .tournament-honours ul { margin: var(--s6) 0 0; padding: 0; list-style: none; }
+  .tournament-honours li + li { margin-top: var(--s6); padding-top: var(--s6); border-top: 1px solid #ded4bf; }
+  .winner-category { margin-bottom: var(--s4); color: #725523; font-size: .8125rem; font-weight: 750; }
+  .winner-category > span { margin-right: var(--s1); }
+  .winner-player strong { display: block; color: var(--navy); font-size: 1rem; }
+  .winner-player > span { display: block; margin-top: 2px; font-size: .75rem; color: var(--muted); }
+  .winner-score { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2); min-height: 44px; margin-top: var(--s4); color: #725523; text-decoration: none; }
+  .winner-score > strong { font-size: 1.75rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .winner-score > span { font-size: .75rem; }
+  .winner-score:hover { text-decoration: underline; }
+</style>

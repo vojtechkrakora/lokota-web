@@ -1,7 +1,58 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Edition from '../../components/Edition.astro';
+import TournamentHeader from '../../components/TournamentHeader.astro';
+import TournamentWinners from '../../components/TournamentWinners.astro';
 import { publicContent } from '../../lib/content.ts';
-const { current } = await publicContent();
+import { formatDate } from '../../lib/dates.ts';
+import { hasTournamentResults, latestResultsEdition } from '../../lib/tournament-overview.ts';
+import '../../styles/tournament.css';
+const { current, tournaments } = await publicContent();
+const latest = latestResultsEdition(tournaments);
+const actions = [
+  ...(current ? [{ label: `Aktuální ročník ${current.data.year}`, href: '#rocnik' }] : []),
+  ...(latest ? [{ label: `Výsledky ${latest.data.year}`, href: '#posledni-vysledky' }] : []),
+];
 ---
-<Layout title="Žižkova 200" description="Klubový turnaj dvojic Žižkova 200 — 200 hodů sdružených. Informace, výsledky a archiv ročníků."><header class="page-heading tournament-heading"><p class="eyebrow">Klubový turnaj dvojic</p><h1>Žižkova <span>200</span></h1><p>200 hodů sdružených. Dva hráči, jeden tým.</p><a class="text-link" href="/zizkova-200/archiv/">Archiv ročníků ↗</a></header><div class="reading-wide">{current ? <><Edition entry={current} /><a class="text-link" href={`/zizkova-200/${current.data.year}/`}>Stálý odkaz na ročník {current.data.year} ↗</a></> : <div class="empty-state"><h2>Další ročník připravujeme</h2><p>Termín, propozice a výsledky zveřejníme, jakmile budou potvrzené. Případná kvalifikace na MČR se uvádí u konkrétního ročníku.</p></div>}</div></Layout>
+<Layout title="Žižkova 200" description="Turnaj dvojic Žižkova 200 v Táboře: 200 hodů sdružených na hráče. Aktuální ročník, poslední výsledky, vítězové a archiv.">
+  <TournamentHeader editions={tournaments} currentYear={current?.data.year} actions={actions} />
+  <div class="tournament-layout">
+    <div class="tournament-main">
+      <section id="rocnik" class="tournament-section tournament-panel tournament-current" aria-labelledby="rocnik-heading">
+        {current ? <>
+          <p class="eyebrow">Aktuální ročník · {current.data.year}</p>
+          <h2 id="rocnik-heading">Ročník {current.data.year}</h2>
+          <p class="tournament-current-date">{current.data.startDate ? `${formatDate(current.data.startDate)}${current.data.endDate && current.data.endDate !== current.data.startDate ? ` — ${formatDate(current.data.endDate)}` : ''}` : 'Termín bude oznámen.'}</p>
+          <p class="lead">{current.data.description}</p>
+          {current.data.qualifiesForMcr === true && <p class="notice">Tento ročník je kvalifikační na MČR.</p>}
+          {current.data.qualifiesForMcr === false && <p class="small">Tento ročník není kvalifikační na MČR.</p>}
+          {!hasTournamentResults(current) && <p class="tournament-results-status">Výsledky ročníku {current.data.year} zatím nebyly zveřejněny.{latest && <> Poslední dostupné výsledky najdete níže.</>}</p>}
+          <a class="button" href={`/zizkova-200/${current.data.year}/`}>Informace o ročníku {current.data.year} <span aria-hidden="true">→</span></a>
+        </> : <><p class="eyebrow">Turnaj dvojic v Táboře</p><h2 id="rocnik-heading">Další ročník připravujeme</h2><p>Termín a propozice zveřejníme, jakmile budou potvrzené. Případná kvalifikace na MČR se uvádí u konkrétního ročníku.</p></>}
+      </section>
+      <section id="posledni-vysledky" class="tournament-section" aria-labelledby="posledni-vysledky-heading">
+        <header class="tournament-section-heading">
+          <div><p class="eyebrow">Poslední zveřejněné výsledky</p><h2 id="posledni-vysledky-heading">{latest ? <>Jak se hrálo v roce {latest.data.year}</> : 'Výsledky připravujeme'}</h2></div>
+          {latest && latest.data.results.length > 0 && <p class="small">{latest.data.results.reduce((sum, group) => sum + group.pairs.length, 0)} dvojic</p>}
+        </header>
+        {latest ? <>
+          {latest.data.results.map(group => <section class="tournament-preview-group" aria-labelledby={`prehled-${group.id}`}>
+            <h3 id={`prehled-${group.id}`}>{group.label} · první tři místa</h3>
+            <ol class="tournament-preview-list" role="list">{group.pairs.filter(pair => pair.position <= 3).map(pair => <li class="tournament-preview-row">
+              <span class="tournament-preview-rank" aria-label={`${pair.position}. místo`}>{pair.position}.</span>
+              <div>{pair.players.map(player => <p class="tournament-preview-player">{player.name}<span>{player.club}</span></p>)}</div>
+              <p class="tournament-preview-total"><strong>{pair.total}</strong><small>kuželek za dvojici</small></p>
+            </li>)}</ol>
+          </section>)}
+          <div class="tournament-latest-links">
+            <a class="button" href={`/zizkova-200/${latest.data.year}/${latest.data.results.length ? `#vysledky-${latest.data.year}-heading` : ''}`}>Všechny výsledky {latest.data.year} <span aria-hidden="true">→</span></a>
+            {latest.data.results.length > 0 && <a class="text-link" href={`/zizkova-200/${latest.data.year}/#vysledky-${latest.data.year}-heading`}>Najít hráče nebo oddíl <span aria-hidden="true">↗</span></a>}
+          </div>
+        </> : <div class="empty-state"><p>Výsledky zveřejníme po jejich dodání. Starší podklady najdete v archivu ročníků.</p></div>}
+      </section>
+    </div>
+    <aside class="tournament-sidebar" aria-label="Vítězové a historie turnaje">
+      {latest && <TournamentWinners entry={latest} />}
+      <section class="tournament-panel"><p class="eyebrow">Historie na drahách</p><h2>Vraťte se do minulých ročníků.</h2><p class="small">Dvojice, výkony i kompletní výsledkové listiny na jednom místě. Vyberte rok a najděte svůj výsledek.</p><a class="text-link" href="/zizkova-200/archiv/">Prohlédnout archiv <span aria-hidden="true">→</span></a></section>
+    </aside>
+  </div>
+</Layout>

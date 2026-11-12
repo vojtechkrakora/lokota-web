@@ -1,16 +1,24 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Edition from '../../components/Edition.astro';
+import TournamentHeader from '../../components/TournamentHeader.astro';
+import TournamentWinners from '../../components/TournamentWinners.astro';
 import { publicContent } from '../../lib/content.ts';
+import { latestResultsEdition, hasTournamentResults } from '../../lib/tournament-overview.ts';
+import '../../styles/tournament.css';
 export async function getStaticPaths() { return (await publicContent()).tournaments.map(entry => ({ params: { year: String(entry.data.year) }, props: { entry } })); }
 const { entry } = Astro.props;
-const { tournaments } = await publicContent();
+const { tournaments, current } = await publicContent();
+const latest = latestResultsEdition(tournaments);
+const results = hasTournamentResults(entry);
 ---
-<Layout title={`${entry.data.name} ${entry.data.year}`} description={entry.data.description}><header class="page-heading"><a href="/zizkova-200/" class="text-link">← Žižkova 200</a><h1>Ročník {entry.data.year}</h1></header><div class="reading-wide">
-  <nav class="edition-years" aria-label="Ročníky Žižkovy 200">{tournaments.map(e => <a href={`/zizkova-200/${e.data.year}/`} aria-current={e.data.year === entry.data.year ? 'page' : undefined}>{e.data.year}</a>)}</nav>
-  <Edition entry={entry} /><a href="/zizkova-200/archiv/" class="text-link">Archiv všech ročníků ↗</a></div></Layout>
-<style>
-  .edition-years { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s8); }
-  .edition-years a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: var(--s2) var(--s4); border: 1px solid var(--line); border-radius: var(--radius-small); background: var(--white); font-weight: 700; text-decoration: none; }
-  .edition-years a[aria-current] { border-color: var(--accent); color: var(--white); background: var(--accent); text-decoration: underline; }
-</style>
+<Layout title={`${entry.data.name} ${entry.data.year}`} description={entry.data.description}>
+  <TournamentHeader editions={tournaments} currentYear={current?.data.year} year={entry.data.year} actions={entry.data.results.length ? [{ label: 'Přejít na výsledky a hledání', href: `#vysledky-${entry.data.year}-heading` }] : []} />
+  <div class="tournament-layout">
+    <div class="tournament-main"><Edition entry={entry} /></div>
+    <aside class="tournament-sidebar" aria-label="Turnajový přehled">
+      {entry.data.results.length > 0 ? <TournamentWinners entry={entry} /> : latest && latest.data.year !== entry.data.year && <section class="tournament-panel"><p class="eyebrow">{results ? 'Další výsledky' : 'Než padnou první kuželky'}</p><h2>Výsledky {latest.data.year}</h2><p class="small">{!results && <>Výsledky ročníku {entry.data.year} zatím nejsou zveřejněny. </>}Podívejte se na poslední dostupné pořadí a výkony dvojic.</p><a class="text-link" href={`/zizkova-200/${latest.data.year}/`}>Prohlédnout výsledky {latest.data.year} <span aria-hidden="true">→</span></a></section>}
+      <section class="tournament-panel"><p class="eyebrow">Žižkova 200</p><h2>Další ročníky</h2><p class="small">Kompletní výsledky, jednotlivé výkony i původní podklady najdete u každého doplněného ročníku.</p><a class="text-link" href="/zizkova-200/archiv/">Archiv všech ročníků <span aria-hidden="true">↗</span></a></section>
+    </aside>
+  </div>
+</Layout>

@@ -1,0 +1,64 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import artwork from '../assets/zizkova-200.webp';
+interface Props {
+  editions: CollectionEntry<'tournaments'>[];
+  currentYear?: number;
+  year?: number;
+  archive?: boolean;
+  actions?: { label: string; href: string }[];
+}
+const { editions, currentYear, year, archive = false, actions = [] } = Astro.props;
+const compact = year !== undefined || archive;
+---
+<header class:list={['tournament-hero', { 'tournament-hero-compact': compact }]}>
+  <div class="tournament-hero-copy">
+    {compact ? <a href="/zizkova-200/" class="text-link">← Žižkova 200</a> : <p class="eyebrow">KK Lokomotiva Tábor · kuželkářský turnaj</p>}
+    <h1>{archive ? 'Archiv ročníků' : year !== undefined ? <>Ročník <span>{year}</span></> : <>Žižkova <span>200</span></>}</h1>
+    <p class="tournament-hero-lead">Turnaj dvojic.<br />200 hodů sdružených na hráče.</p>
+    <p class="tournament-hero-discipline">Dva hráči, jeden tým. <strong>2 × 200 hs.</strong></p>
+    {actions.length > 0 && <div class="tournament-hero-actions">{actions.map((action, index) => <a href={action.href} class:list={['button', { 'button-outline': index > 0 }]}>{action.label}<span aria-hidden="true">↓</span></a>)}</div>}
+  </div>
+  <figure class="tournament-hero-art">
+    <Image src={artwork} alt="Ilustrace Žižkovy 200: Jan Žižka, panorama Tábora, kuželky a červená koule s nápisem turnaje a znakem klubu." width={1536} height={768} widths={[480, 720, 960, 1280, 1536]} sizes="(max-width: 895px) calc(100vw - 40px), 700px" format="webp" quality={85} loading="eager" fetchpriority="high" />
+    <figcaption>Žižkova 200 · turnaj dvojic v Táboře · ilustrace</figcaption>
+  </figure>
+</header>
+<nav class="tournament-navigation" aria-label="Ročníky Žižkovy 200">
+  <a class="tournament-archive-link" href="/zizkova-200/archiv/" aria-current={archive ? 'page' : undefined}>Archiv ročníků <span aria-hidden="true">↗</span></a>
+  <div class="tournament-year-links">{editions.map(entry => <a href={`/zizkova-200/${entry.data.year}/`} aria-current={year === entry.data.year ? 'page' : undefined}>{entry.data.year}{entry.data.year === currentYear && <small>Aktuální</small>}</a>)}</div>
+</nav>
+<style>
+  .tournament-hero { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.3fr); align-items: center; gap: var(--s8); padding-block: var(--s12) var(--s8); }
+  .tournament-hero-copy { min-width: 0; }
+  .tournament-hero .eyebrow { color: var(--accent); font-size: .6875rem; }
+  .tournament-hero h1 { margin-block: var(--s4); font-size: clamp(2.75rem, 4.7vw, 4.25rem); letter-spacing: -.055em; }
+  .tournament-hero h1 span { color: var(--accent); }
+  .tournament-hero-lead { font-size: clamp(1.125rem, 1.6vw, 1.375rem); font-weight: 650; line-height: 1.5; color: var(--navy); }
+  .tournament-hero-discipline { font-size: .9375rem; color: var(--muted); }
+  .tournament-hero-discipline strong { white-space: nowrap; font-weight: 650; }
+  .tournament-hero-actions { display: flex; flex-wrap: wrap; gap: var(--s3); margin-top: var(--s6); }
+  .tournament-hero-art { min-width: 0; }
+  .tournament-hero-art img { width: 100%; height: auto; border-radius: var(--radius); }
+  .tournament-hero-art figcaption { font-size: .6875rem; text-align: right; }
+  .tournament-hero-compact { grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); }
+  .tournament-hero-compact h1 { font-size: clamp(2rem, 4vw, 3rem); }
+  .tournament-hero-compact .tournament-hero-lead { font-size: 1.125rem; }
+  .tournament-navigation { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s4); padding-block: var(--s4); margin-bottom: var(--s8); border-block: 1px solid var(--accent-line); }
+  .tournament-archive-link { display: inline-flex; align-items: center; gap: var(--s3); min-height: 44px; font-weight: 750; text-decoration: none; }
+  .tournament-archive-link:hover, .tournament-archive-link[aria-current] { text-decoration: underline; }
+  .tournament-year-links { display: flex; flex-wrap: wrap; gap: var(--s2); }
+  .tournament-year-links a { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: var(--s2); min-height: 44px; padding: var(--s2) var(--s4); border: 1px solid var(--line); border-radius: var(--radius-small); color: var(--navy); background: var(--white); font-weight: 750; text-decoration: none; font-variant-numeric: tabular-nums; }
+  .tournament-year-links small { color: var(--muted); font-size: .6875rem; font-weight: 500; }
+  .tournament-year-links a:hover { border-color: var(--accent); color: var(--accent); }
+  .tournament-year-links a[aria-current] { border-color: var(--accent); background: var(--accent); color: var(--white); text-decoration: underline; }
+  .tournament-year-links a[aria-current] small { color: var(--white); }
+  @media (max-width: 56rem) {
+    .tournament-hero, .tournament-hero-compact { grid-template-columns: minmax(0, 1fr); gap: var(--s6); padding-top: var(--s8); }
+    .tournament-hero h1 { font-size: clamp(2.5rem, 8vw, 4rem); }
+    .tournament-hero-compact .tournament-hero-art { max-width: 26rem; }
+    .tournament-hero-art figcaption { text-align: left; }
+    .tournament-navigation { align-items: start; }
+  }
+</style>

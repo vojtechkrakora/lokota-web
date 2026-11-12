@@ -1,27 +1,35 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import TournamentHeader from '../../components/TournamentHeader.astro';
 import { publicContent } from '../../lib/content.ts';
-const { tournaments } = await publicContent();
+import { hasTournamentResults } from '../../lib/tournament-overview.ts';
+import '../../styles/tournament.css';
+const { tournaments, current } = await publicContent();
+const past = tournaments.filter(entry => entry.data.archived && entry.data.results.length > 0);
 ---
-<Layout title="Archiv Žižkovy 200" description="Minulé ročníky klubového turnaje dvojic Žižkova 200. Výsledky dvojic a hledání hráčů v jednotlivých letech.">
-  <header class="page-heading"><a href="/zizkova-200/" class="text-link">← Žižkova 200</a><h1>Archiv turnaje</h1><p>Žižkova 200 · turnaj dvojic na 200 hodů sdružených.</p></header>
-  <div class="reading-wide">
-    {tournaments.length ? <>
-      <p class="lead">Vyberte ročník a najděte svůj výsledek. V každém přehledu můžete hledat hráče i oddíl a prohlédnout si výkony celé dvojice.</p>
-      <ul class="edition-list">{tournaments.map(e => {
-        const pairs = e.data.results.reduce((sum, group) => sum + group.pairs.length, 0);
-        return <li><a href={`/zizkova-200/${e.data.year}/`}><strong>{e.data.year}</strong><span><b>{e.data.name}</b>{pairs > 0 && <small>{pairs} dvojic · {pairs * 2} hráčských startů<span>Výsledky a hledání hráčů</span></small>}</span><span aria-hidden="true">↗</span></a></li>;
-      })}</ul>
-    </> : <div class="empty-state"><h2>Archiv zatím čeká na podklady</h2><p>Starší ročníky zde mohou být postupně doplněny.</p></div>}
+<Layout title="Archiv Žižkovy 200" description="Ročníky turnaje dvojic Žižkova 200 v Táboře. Kompletní výsledky, vítězné dvojice a hledání hráčů nebo oddílů.">
+  <TournamentHeader editions={tournaments} currentYear={current?.data.year} archive />
+  <div class="tournament-layout">
+    <section class="tournament-main" aria-labelledby="archiv-heading">
+      <header class="tournament-section-heading"><div><p class="eyebrow">Od letoška do historie</p><h2 id="archiv-heading">Vyberte si ročník.</h2></div></header>
+      {tournaments.length ? <ul class="tournament-archive-list">{tournaments.map(entry => {
+        const pairs = entry.data.results.reduce((sum, group) => sum + group.pairs.length, 0);
+        const results = hasTournamentResults(entry);
+        return <li><a class="tournament-archive-card" href={`/zizkova-200/${entry.data.year}/`}>
+          <strong class="tournament-archive-year">{entry.data.year}</strong>
+          <div><p class="eyebrow">{entry.data.year === current?.data.year ? 'Aktuální ročník' : 'Historický ročník'}</p><h2>{entry.data.name}</h2><p class="small">{pairs > 0 ? `${pairs} dvojic · ${pairs * 2} hráčských startů` : results ? 'Zveřejněné výsledky' : 'Výsledky zatím nejsou zveřejněny'}</p><span class="tournament-archive-action">{results ? 'Výsledky a hledání hráčů' : 'Informace a propozice'}</span></div>
+          <span aria-hidden="true">→</span>
+        </a></li>;
+      })}</ul> : <div class="empty-state"><h2>Archiv zatím čeká na podklady</h2><p>Starší ročníky zde mohou být postupně doplněny.</p></div>}
+    </section>
+    {past.length > 0 && <aside class="tournament-sidebar" aria-label="Vítězné dvojice minulých ročníků">
+      <section class="tournament-panel"><p class="eyebrow">Zapsali se do historie</p><h2>Vítězné dvojice</h2>
+        <ul class="tournament-history-winners">{past.flatMap(entry => entry.data.results.flatMap(group => group.pairs.filter(pair => pair.position === 1).map(pair => <li>
+          <a href={`/zizkova-200/${entry.data.year}/#vysledky-${entry.data.year}-${group.id}`}>{entry.data.year} · {group.label} <span aria-hidden="true">↗</span></a>
+          {pair.players.map(player => <p>{player.name}</p>)}
+          <p class="small">{pair.total} kuželek za dvojici</p>
+        </li>)))}</ul>
+      </section>
+    </aside>}
   </div>
 </Layout>
-<style>
-  .edition-list { margin-top: var(--s6); }
-  .edition-list a { color: var(--navy); }
-  .edition-list a:hover { color: var(--accent); }
-  .edition-list strong { font-size: clamp(2rem, 6vw, 3rem); font-variant-numeric: tabular-nums; }
-  .edition-list a > span { min-width: 0; }
-  .edition-list b { font-weight: 700; }
-  .edition-list small { display: block; color: var(--muted); font-size: .875rem; margin-top: var(--s1); }
-  .edition-list small span { display: block; color: var(--accent); }
-</style>

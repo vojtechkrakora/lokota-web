@@ -277,19 +277,11 @@
   .player-set-points strong { color: var(--navy); }
   .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s6); margin-block: var(--s8); }
   .gallery img { width: 100%; border-radius: var(--radius); }
-  .tournament-heading { position: relative; padding-left: var(--s6); margin-block: var(--s8); border-left: 4px solid var(--accent); }
-  .tournament-heading h1 { font-size: clamp(2.5rem, 6vw, 4rem); }
-  .tournament-heading h1 span { color: var(--accent); }
-  .tournament-heading > .text-link { margin-top: var(--s4); }
   .edition h2 { font-size: 1.8rem; margin-block: var(--s4); }
   .edition .lead { font-size: 1.125rem; color: var(--muted); }
   .edition-date { font-weight: 650; margin-block: var(--s6); }
   .edition .empty-state, .downloads { margin-block: var(--s8); }
   .notice { padding: var(--s4) var(--s6); border-left: 3px solid var(--accent); background: var(--accent-soft); }
-  .edition-list { list-style: none; padding: 0; margin: 0; }
-  .edition-list a { display: flex; align-items: center; gap: var(--s6); padding: var(--s6) 0; border-bottom: 1px solid var(--line); text-decoration: none; }
-  .edition-list strong { font-size: 2rem; }
-  .edition-list a > :last-child { margin-left: auto; }
   .partners { padding-block: var(--s8); border-top: 1px solid var(--accent-line); background: var(--white); }
   .partners-inner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4) var(--s8); }
   .partners h2 { flex: 1 1 12rem; font-size: 1.125rem; letter-spacing: -.015em; }
@@ -390,6 +382,5 @@
     .gallery { grid-template-columns: minmax(0, 1fr); }
     .footer-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
     .footer-grid nav { flex-direction: row; flex-wrap: wrap; gap: 0 var(--s6); }
-    .tournament-heading { margin-block: var(--s4); padding-left: var(--s4); }
   }
 }
