@@ -9,9 +9,12 @@ import { pragueClock } from '../src/lib/dates.ts';
 const news = resolve('src/content/news/sdd-test');
 const editions = resolve('src/content/tournaments/sdd-test');
 const downloads = resolve('public/downloads/sdd-test');
-const cleanup = async () => { for (const path of [news, editions, downloads]) await rm(path, { recursive: true, force: true }); };
+// Match the actual Pages CMS collection/media paths without changing the retained draft.
+const cmsEntry = resolve('src/content/news/redakce/00000000-0000-4000-8000-000000000040.md');
+const cmsImage = resolve('src/content/news/redakce/images/sdd-cms.png');
+const cleanup = async () => { for (const path of [news, editions, downloads, cmsEntry, cmsImage]) await rm(path, { recursive: true, force: true }); };
 if (process.argv.includes('--clean')) { await cleanup(); process.exit(0); }
-for (const path of [news, editions, downloads]) {
+for (const path of [news, editions, downloads, cmsEntry, cmsImage]) {
   try { await access(path); throw new Error(`Test area already exists: ${path}. Remove with --clean after reviewing.`); }
   catch (error) { if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error; }
 }
@@ -34,7 +37,7 @@ slug: sdd-test-${i}
 title: "TEST — článek ${i}"
 publicationDate: "2025-10-${String(i).padStart(2, '0')}"
 summary: "Pouze testovací obsah pro ověření článků a galerie."
-${i % 2 ? 'cover:\n  src: ./test-cover.png\n  alt: "Testovací geometrická grafika, nejde o fotografii klubu"\n' : ''}gallery:
+${i === 1 ? 'downloads:\n  - label: TEST — příloha článku\n    path: /downloads/sdd-test/results.csv\n' : ''}${i % 2 ? 'cover:\n  src: ./test-cover.png\n  alt: "Testovací geometrická grafika, nejde o fotografii klubu"\n' : ''}gallery:
   - src: ./test-cover.png
     alt: "Testovací grafika v galerii"
     caption: "TEST — pouze pro kontrolu zpracování obrázků."
@@ -42,7 +45,7 @@ ${i % 2 ? 'cover:\n  src: ./test-cover.png\n  alt: "Testovací geometrická graf
 
 ## Pouze testovací obsah
 
-Tento článek nepopisuje skutečnou událost. [Zpět na novinky](/novinky/).
+Tento článek nepopisuje **skutečnou událost**. [Zpět na novinky](/novinky/).\n\n- Testovací odrážka\n- Další bod
 `);
   await writeFile(resolve(news, 'draft.md'), `---
 slug: sdd-private-draft
@@ -71,14 +74,45 @@ downloads:
 Nejde o skutečné výsledky turnaje.
 ${year !== 2003 ? '\n## Výsledky\n\n| Dvojice | Kuželky |\n| --- | --- |\n| Testovací dvojice | 123 |\n' : ''}`);
   await writeFile(resolve(downloads, 'results.csv'), 'dvojice,kuzelky\nTestovaci dvojice,123\n');
+  await copyFile('tests/fixtures/test-cover.png', cmsImage);
+  await writeFile(cmsEntry, `---
+slug: 00000000-0000-4000-8000-000000000040
+title: TEST — redakční článek
+publicationDate: '2024-01-01'
+summary: Pouze dočasná zkouška cest editoru.
+draft: false
+cover:
+  src: ./images/sdd-cms.png
+  alt: Testovací geometrická grafika
+gallery: []
+downloads:
+  - label: TEST — redakční příloha
+    path: /downloads/sdd-test/results.csv
+---
+## Test redakce
+
+Text s **formátováním** a [odkazem](/novinky/).
+`);
   validateContent();
   const result = spawnSync(process.execPath, ['scripts/build.ts', '--fixture'], { stdio: 'inherit', env: { ...process.env, SITE_ORIGIN: 'https://editorial-test.invalid', ASTRO_TELEMETRY_DISABLED: '1' } });
   assert.equal(result.status, 0, 'Editorial static build must succeed');
   const out = '.cache/offline-dist';
   for (const route of ['novinky/sdd-test-1/index.html', 'novinky/archiv/2025/index.html', 'novinky/archiv/2025/strana/2/index.html', 'zizkova-200/2001/index.html', 'zizkova-200/2002/index.html', 'zizkova-200/2003/index.html']) await access(resolve(out, route));
+  const cmsHtml = await readFile(resolve(out, 'novinky/00000000-0000-4000-8000-000000000040/index.html'), 'utf8');
+  assert.match(cmsHtml, /<strong>formátováním<\/strong>/);
+  assert.match(cmsHtml, /alt="Testovací geometrická grafika"/);
+  assert.match(cmsHtml, /srcset=/);
+  assert.match(cmsHtml, /TEST — redakční příloha/);
   const html = await readFile(resolve(out, 'novinky/sdd-test-1/index.html'), 'utf8');
+  assert.match(html, /<strong>skutečnou událost<\/strong>/);
+  assert.match(html, /<li>Testovací odrážka<\/li>/);
+  assert.match(html, /aria-labelledby="article-downloads"/);
+  assert.match(html, /href="\/downloads\/sdd-test\/results.csv" download/);
+  assert.match(html, /TEST — příloha článku/);
+  await access(resolve(out, 'downloads/sdd-test/results.csv'));
   assert.match(html, /srcset=/); assert.match(html, /loading="lazy"/); assert.match(html, /width="/);
   const noCover = await readFile(resolve(out, 'novinky/sdd-test-2/index.html'), 'utf8');
+  assert.ok(!noCover.includes('id="article-downloads"'), 'Articles without downloads do not show an empty section');
   assert.ok(!noCover.includes('class="article-cover"'), 'Optional cover must not produce a broken hero');
   const listing = await readFile(resolve(out, 'novinky/index.html'), 'utf8');
   const homepage = await readFile(resolve(out, 'index.html'), 'utf8');

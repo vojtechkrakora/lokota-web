@@ -45,6 +45,8 @@ Inspect local logs or, after deployment approval, Pages/Workers logs. Only contr
 
 The owner-supplied club emblem is maintained at src/assets/club-logo.jpg, relocated from the initial downloads area without changing its bytes. Replace this source to update the shared-header logo and browser favicon; Astro generates the small responsive WebP variants during builds. Keep the supplied artwork and proportions intact. The downloads directory is for tournament attachments.
 
+The owner-authorized Pages CMS trial is configured in [.pages.yml](.pages.yml); setup and Czech author instructions are in [docs/redakce.md](docs/redakce.md). It offers a separate draft-first news collection, source images processed by Astro and optional PDF/CSV article attachments. Existing custom reports remain outside the visual-editor trial. GitHub connection and real hosted-editor saves are pending; no additional website hosting/domain is required.
+
 News lives under src/content/news, tournament editions under src/content/tournaments, and the four club pages under src/content/club. Use ordinary Markdown. Put local photographs beside their entries; about 20 photographs/year is expected. Crop/resize excessive source images before committing. Astro generates responsive web images; gallery links open larger optimized files without a lightbox.
 
 Example article frontmatter (replace all example values and provide a real local photograph):
@@ -66,6 +68,8 @@ gallery:
 draft: true
 ---
 ```
+
+Articles may also supply optional `downloads` entries (`label` and `path`), using the same local PDF/CSV path rules as tournaments. The article renders a “Ke stažení” list; empty downloads are omitted. Existing files must stay within public/downloads and 25 MiB, including references in drafts.
 
 Add the Markdown body after frontmatter. Dates must be quoted real YYYY-MM-DD calendar dates; a published article cannot be future-dated. Optional author/gallery may be omitted. Cover is optional: omit the whole cover block for a typographic entry in the full news listing; the homepage uses a navy lane-motif preview instead. Neither view repeats a large emblem placeholder. If supplied, cover requires a local image and meaningful alt; a missing referenced file remains an error. The article detail omits a large cover when absent. Slugs stay stable and unique; archiv/strana are reserved. Published is the default (`draft: false`). Drafts are validated but excluded from routes, feeds, sitemap and Astro's public image store. Git itself and public PR previews are not private editorial storage. Files in public are public even when attached to a draft.
 

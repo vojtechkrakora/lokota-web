@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { z } from 'astro/zod';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, truncateSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { contentSchemas, currentEdition, uniqueValues, isPublished } from '../src/lib/content-rules.ts';
-import { localReference } from '../scripts/check-content.ts';
+import { localReference, validateContent } from '../scripts/check-content.ts';
 import { publishingContext } from '../src/site.ts';
 
 const schemas = contentSchemas(z.string(), '2026-11-02');
@@ -38,6 +38,45 @@ test('local references reject missing, escaping and oversized attachments', () =
     assert.throws(() => localReference(root, 'secret.pdf', join(root, 'downloads')), /escapes/);
     assert.throws(() => localReference(root, 'downloads/missing.pdf', join(root, 'downloads')));
     assert.throws(() => localReference(root, 'downloads/results.csv', join(root, 'downloads'), 1), /exceeds/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+test('news downloads use checked local PDF/CSV references, including drafts', () => {
+  assert.deepEqual(schemas.news.parse(article).downloads, []);
+  const valid = { label: 'Výsledky (PDF)', path: '/downloads/news/results.pdf' };
+  assert.deepEqual(schemas.news.parse({ ...article, downloads: [valid] }).downloads, [valid]);
+  for (const change of [
+    { path: 'https://example.cz/results.pdf' }, { path: '/downloads/../secret.pdf' },
+    { path: '/downloads/news/results.exe' }, { path: '/downloads/news/white space.pdf' },
+    { label: ' ' }, { path: '/downloads/news/results.pdf', unknown: true },
+  ]) assert.equal(schemas.news.safeParse({ ...article, downloads: [{ ...valid, ...change }] }).success, false);
+
+  const root = mkdtempSync(join(tmpdir(), 'lokota-news-downloads-'));
+  const content = join(root, 'content');
+  const publicRoot = join(root, 'public');
+  try {
+    for (const collection of ['news', 'tournaments', 'club']) mkdirSync(join(content, collection), { recursive: true });
+    mkdirSync(join(publicRoot, 'downloads/news'), { recursive: true });
+    const attachment = join(publicRoot, 'downloads/news/results.pdf');
+    const save = (path: string) => writeFileSync(join(content, 'news/test.md'), `---
+slug: attachment-test
+title: Test attachment
+publicationDate: '2025-01-01'
+summary: Test summary
+draft: true
+downloads:
+  - label: Results PDF
+    path: ${path}
+---
+Test body.
+`);
+    save('/downloads/news/results.pdf');
+    assert.throws(() => validateContent(content, publicRoot), /Invalid content/, 'A draft must reject missing files too');
+    writeFileSync(attachment, '%PDF-1.4\n');
+    assert.equal(validateContent(content, publicRoot).news[0].data.downloads.length, 1);
+    truncateSync(attachment, 25 * 1024 * 1024 + 1);
+    assert.throws(() => validateContent(content, publicRoot), /Invalid content/, 'Oversized news files must fail');
+    save('/downloads/../secret.pdf');
+    assert.throws(() => validateContent(content, publicRoot), /Invalid content/);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 test('origin policy handles local, PR previews and temporary Pages production without indexing', () => {

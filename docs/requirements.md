@@ -25,13 +25,19 @@ The initial documentation phase created only the constitution and this specifica
 | ID | Constraint |
 | --- | --- |
 | CON-01 | Astro, TypeScript, SSG, Markdown/Astro Content Collections, GitHub, and Cloudflare Pages Free are the confirmed stack. Prefer built-in Astro image handling and simple reusable Astro components. |
-| CON-02 | No database, traditional backend, initial CMS, custom admin UI, user authentication, microservices, or production Docker requirement. No frontend framework without a concrete requirement. Minimize external dependencies and browser JavaScript. |
-| CON-03 | Store all manually maintained content and photographs in Git. Initial editing uses Git and AI assistants, without a publishing service. |
+| CON-02 | No database, traditional backend, site-hosted CMS/custom admin UI/user authentication, microservices, or production Docker requirement. T-40 permits the owner-requested externally hosted Pages CMS trial as an editing layer over Git. No frontend framework without a concrete requirement. Minimize external dependencies and browser JavaScript. |
+| CON-03 | Store all manually maintained content and photographs in Git. Initial editing uses Git and AI assistants; the owner-authorized T-40 Pages CMS trial also writes ordinary content/assets to that same repository. |
 | CON-04 | Use official public read-only ČKA data without authenticated endpoints. Verify actual contracts and records; do not invent endpoints/fields or scrape HTML where an API exists. Centralize API/club configuration and avoid fixed competition IDs that must change each season. |
 | CON-05 | Prefer build-time sports data retrieval. A schedule or Worker requires specific justification; additional infrastructure must have an explained need. No real-time infrastructure is required. |
 | CON-06 | Target 0 CZK/month recurring hosting within free-tier limits, excluding existing domain registration. No regular server administration. |
 | CON-07 | Preserve the existing domain and email configuration during eventual migration. Do not make DNS or production infrastructure changes in initial SDD phases. |
 | CON-08 | Requirements precede design; design precedes implementation tasks; implementation follows approved specifications. Stop after this initial phase for review. |
+
+### Owner-authorized Pages CMS trial, 2026-11-12 (CON-02/CON-03/CON-06; FR-02/FR-09)
+
+After discussing formatted news, photographs and attachments, the owner requested “Can we try it?” for this repository using free hosted Pages CMS without new hosting or a domain. This authorizes local configuration/integration and verification of that specific trial. It supersedes the initial no-CMS/editing-only-with-Git constraints only for an external Git-based news editor; no CMS server/database/authentication is added to the website. Git publication, GitHub App installation/account access, actual hosted-editor acceptance and deployment are separate milestones, not established by this request.
+
+Acceptance: provide Czech-labelled title, summary, date, author, formatted body, optional cover/gallery and labelled PDF/CSV attachment fields. New editor articles default to drafts, generate stable identifiers without asking authors to manage URLs, and use the existing news/detail/archive/homepage model. Use a dedicated editorial collection for the trial so existing complex match-report HTML is not rewritten by an unverified rich-text editor. Store source images in Git for Astro optimization, and check attachments as existing local files under the download area within 25 MiB. Preserve existing article URLs/content, sports integration, tournament content, no-JavaScript availability and deployment behavior. Hosted saves are Git writes; marking published does not establish a successful deployment. Explain that draft assets/downloads and repository content are not confidential storage. No new package/service hosting/domain/DNS is required; hosted-service access and a real authoring round trip remain to verify.
 
 ### Owner-authorized presentation revision, 2026-11-02
 

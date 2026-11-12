@@ -1,0 +1,145 @@
+# Trial: only articles created in this collection; existing reports stay unchanged.
+media:
+  - name: news_images
+    label: Fotografie k novinkám
+    input: src/content/news/redakce/images
+    output: ./images
+    extensions: [jpg, jpeg, png, webp]
+    rename: random
+  - name: news_downloads
+    label: Přílohy k novinkám
+    input: public/downloads/news
+    output: /downloads/news
+    extensions: [pdf, csv]
+    rename: random
+
+content:
+  - name: news
+    label: Novinky
+    description: Nové články začínají jako koncepty. Změny se ukládají do GitHubu; zveřejnění vyžaduje úspěšné sestavení webu.
+    type: collection
+    path: src/content/news/redakce
+    format: yaml-frontmatter
+    exclude: [images/**]
+    filename:
+      template: '{fields.slug}.md'
+      field: false
+    operations:
+      create: true
+      rename: false
+      delete: false
+    view:
+      primary: title
+      fields: [title, publicationDate, draft]
+      sort: [publicationDate, title]
+      search: [title, summary]
+      default:
+        sort: publicationDate
+        order: desc
+    fields:
+      - name: slug
+        type: uuid
+        hidden: true
+        required: true
+        options:
+          editable: false
+          generate: false
+      - name: draft
+        label: Koncept
+        type: boolean
+        default: true
+        description: Zapnuto = článek není na webu. Vypněte až po kontrole textu a fotografií. Koncept ani přílohy nejsou soukromé úložiště.
+      - name: title
+        label: Nadpis
+        type: string
+        required: true
+      - name: publicationDate
+        label: Datum zveřejnění
+        type: date
+        required: true
+        options:
+          format: yyyy-MM-dd
+          time: false
+        description: Dnes nebo dříve. Budoucí datum je možné pouze u konceptu; automatické naplánování není zapnuté.
+      - name: summary
+        label: Krátký úvod
+        type: text
+        required: true
+        description: Jedna až dvě věty pro úvodní stránku a přehled novinek.
+      - name: author
+        label: Autor
+        type: string
+      - name: body
+        label: Text článku
+        type: rich-text
+        required: true
+        options:
+          format: markdown
+          switcher: false
+          media: false
+        description: Použijte odstavce, nadpisy, tučné písmo, seznamy a odkazy. Fotografie přidejte níže.
+      - name: cover
+        label: Úvodní fotografie (nepovinná)
+        type: object
+        fields:
+          - name: src
+            label: Fotografie
+            type: image
+            required: true
+            options:
+              media: news_images
+          - name: alt
+            label: Co je na fotografii
+            type: string
+            required: true
+            options:
+              minlength: 3
+          - name: caption
+            label: Popisek pod fotografií
+            type: string
+      - name: gallery
+        label: Další fotografie (nepovinné)
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: '{alt}'
+        fields:
+          - name: src
+            label: Fotografie
+            type: image
+            required: true
+            options:
+              media: news_images
+          - name: alt
+            label: Co je na fotografii
+            type: string
+            required: true
+            options:
+              minlength: 3
+          - name: caption
+            label: Popisek pod fotografií
+            type: string
+      - name: downloads
+        label: Přílohy ke stažení (nepovinné)
+        description: PDF nebo CSV, nejvýše 25 MiB na soubor. Přílohy ve veřejném adresáři jsou veřejné i u konceptů.
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: '{label}'
+        fields:
+          - name: label
+            label: Název odkazu
+            type: string
+            required: true
+          - name: path
+            label: Soubor
+            type: file
+            required: true
+            options:
+              media: news_downloads
+
+settings:
+  content:
+    merge: true
