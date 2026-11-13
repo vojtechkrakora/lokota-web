@@ -64,6 +64,12 @@ Owner-approved palette refinement, 2026-11-03 (FR-09; NFR-01–NFR-03; T-21): �
 
 Publication authorization, 2026-11-03: the owner's subsequent “commit and push” authorizes Git publication of the current T-21 warm/red palette, homepage photograph, additional club-gallery content and related documentation. This supersedes the preceding local-only publication restrictions for this scope. Successful CI/Pages deployment, live verification and final appearance acceptance remain separate; no domain/DNS or infrastructure changes are requested.
 
+Owner-requested homepage introduction artwork, 2026-11-13 (FR-01/FR-09; NFR-01–NFR-03; T-42): replace only the team photograph beside the season and team/competition counts with the supplied “Dvojitý čtvrtek doma, v sobotu Hazlov” illustration. Preserve the entire supplied composition and its native proportions on desktop and mobile, without cropping, stretching or rounded clipping. Keep the original club photograph available for other existing uses; use local optimized responsive image variants and a Czech alternative text conveying the supplied text. Preserve the introduction's existing placement/sizing, sports data, news, routes and integrations. This authorizes local implementation; commit/push/deployment and final appearance acceptance remain separate.
+
+Rejected visual trial, 2026-11-13 (FR-01/FR-09; T-43): the owner requested a ball-and-pin composition for the homepage illustration, then explicitly rejected the local result and requested rollback. Restore T-42's plain rectangular image, complete and uncropped, at the original responsive sizes. The ball-and-pin treatment is no longer part of the requested appearance. Publication and final appearance acceptance remain separate.
+
+Publication authorization, 2026-11-13 (T-42/T-43): after the ball/pin rollback, the owner explicitly requested “tak to muzes publikovat”. This authorizes commit, push and production publication of the current rectangular, uncropped homepage illustration and its related documentation through the existing GitHub/Pages workflow. It does not authorize unrelated work or domain/infrastructure changes. Verify Git, CI/Pages and actual production output separately.
+
 ## 4. Functional requirements and acceptance criteria
 
 The following are confirmed baseline requirements. Acceptance criteria describe observable outcomes for later verification; they do not imply that implementation exists.

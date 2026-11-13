@@ -85,6 +85,12 @@ Warm palette refinement, 2026-11-03 (FR-09; NFR-01–NFR-03; T-21): update share
 
 Publication follow-up, 2026-11-03: the owner explicitly requested “commit and push” for the locally verified T-21 palette/photo work and supplied-photo gallery content. Publish through the existing GitHub/Pages integration; no delivery configuration changes are needed. This supersedes T-21's local-only Git restriction; CI/Pages results and live verification must be checked separately.
 
+Homepage introduction artwork replacement, 2026-11-13 (FR-01/FR-09; NFR-01–NFR-03; D-02/D-08; T-42): retain the supplied 1672×941 PNG unchanged as src/assets/home-intro-2026-11-13.png and import it in the homepage through Astro Image instead of club-team.webp. Keep club-team.webp and its other consumers unchanged. Generate WebP widths 128/224/256/448 using the established eager-loading/sizes policy; infer height from the new source rather than carrying over the old 4:3 height. Rename the image class to home-intro-image, retain 224px desktop/128px mobile widths with automatic height, explicitly contain the image and remove rounded corner clipping. Describe the illustration's supplied headline/results in Czech alt text without treating illustrated content as a new data source. No new dependency, JavaScript, sports-data or content-model change is needed. Verify the source copy, optimized variant proportions, responsive full-frame display and production build.
+
+Rejected ball-and-pin trial, 2026-11-13 (FR-01/FR-09; D-02/D-08; T-43): after reviewing the local CSS/SVG composition, the owner explicitly requested rollback. Remove the decorative wrapper, circle and inline pin SVG/styles, restoring T-42's direct Astro image with automatic height, object-fit:contain and 224px desktop/128px mobile widths/sizes. Retain the supplied source, alt and responsive image variants. The trial is historical evidence, not the current design.
+
+Publication follow-up, 2026-11-13 (T-42/T-43): the owner authorized publishing the current T-42 rectangle after rejecting and reverting the ball/pin trial. Use the existing main-branch GitHub/Pages integration; no delivery configuration changes. Record exact commit, successful CI/Pages and the live full-frame image separately.
+
 ## 3. D-02 — Routes, information hierarchy, and feed
 
 Use Czech labels and short stable ASCII URL segments:

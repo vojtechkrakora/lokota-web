@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import clubPhoto from '../assets/club-team.webp';
+import homeIllustration from '../assets/home-intro-2026-11-13.png';
 import Layout from '../layouts/Layout.astro';
 import FeaturedNews from '../components/FeaturedNews.astro';
 import TableScroll from '../components/TableScroll.astro';
@@ -13,7 +13,7 @@ const assets = await sportsAssets(sports);
 <Layout title="Kuželky v Táboře" description="Novinky KK Lokomotiva Tábor, zápasy, oficiální výsledky a tabulky. Turnaj dvojic Žižkova 200.">
   <header class="home-masthead">
     <div class="home-introduction"><div><p class="eyebrow">KK Lokomotiva Tábor</p><h1>Kuželky v Táboře.</h1></div><p class="home-season">Sezóna <strong data-sports-season>{sports.season.name}</strong><span data-sports-slot="home-counts">{sports.teams.length} družstev · {sports.competitions.length} soutěží</span></p></div>
-    <Image src={clubPhoto} alt="Společná fotografie hráčů na kuželně v Táboře." width={224} height={168} widths={[128, 224, 256, 448]} sizes="(max-width: 760px) 128px, 224px" format="webp" quality={82} loading="eager" class="home-team-photo" />
+    <Image src={homeIllustration} alt="Dvojitý čtvrtek doma, v sobotu Hazlov. Čtyři zápasy pro naše barvy. Včera doma dvakrát 1:5." width={224} widths={[128, 224, 256, 448]} sizes="(max-width: 760px) 128px, 224px" format="webp" quality={82} loading="eager" class="home-intro-image" />
   </header>
   <section id="aktualne" class="home-news" aria-label="Aktuální články">
     <h2 class="sr-only">Zprávy z klubu</h2>
